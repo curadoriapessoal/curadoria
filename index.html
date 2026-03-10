@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Meu Catálogo</title>
+    <title>Curadoria 800x800</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
@@ -9,150 +9,176 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     
     <style>
-        /* Estilos para a barra de estrelas */
-        .star-bar {
-            width: 100%; display: flex; justify-content: space-around; 
-            padding: 10px 0; background: #fafafa; border-top: 1px solid #eee;
-            z-index: 20; /* Fica acima do swipe */
+        /* Layout 100% Preto */
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            height: 100vh;
         }
-        .star-btn {
-            background: none; border: none; font-size: 1.5rem; color: #ccc;
-            cursor: pointer; padding: 5px 10px; transition: transform 0.1s;
+
+        #auth_button { 
+            padding: 20px 40px; 
+            font-size: 1.2rem; 
+            background: #fff; 
+            color: #000; 
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            font-weight: bold;
         }
-        .star-btn:active { transform: scale(1.3); }
-        .star-btn[data-val="0"] { font-size: 1.2rem; font-weight: bold; color: #999; }
-                
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; overflow: hidden; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        h1 { font-size: 1.2rem; color: #333; margin: 10px 0; }
-        
-        #auth_button { padding: 15px 25px; font-size: 18px; cursor: pointer; display: none; background: #4285f4; color: white; border: none; border-radius: 5px; margin-top: 50px; }
-        
-        /* Container da Pilha de Cartões */
+
+        /* Container ajustado para a proporção 800x800 + footer */
         #catalog-container { 
-            position: relative; width: 90vw; max-width: 350px; height: 70vh; 
-            margin-top: 20px; perspective: 1000px; 
+            position: relative; 
+            width: 800px; 
+            height: 920px; /* 800 da foto + espaço das estrelas */
+            perspective: 1000px; 
+            display: none;
         }
 
         .card { 
-            position: absolute; width: 100%; height: 100%; background: white;
-            border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            transition: transform 0.3s ease; touch-action: none; cursor: grab;
-            overflow: hidden; border: 1px solid #eee;
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background: #000;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            transition: transform 0.3s ease, opacity 0.3s ease; 
+            touch-action: none;
         }
 
         .card img { 
-            width: 100%; height: 85%; object-fit: cover; pointer-events: none; 
-            border-bottom: 1px solid #f0f0f0;
+            width: 800px; 
+            height: 800px; 
+            object-fit: contain;
+            pointer-events: none;
+            user-select: none;
         }
 
-        .card-info { padding: 10px; font-size: 0.9rem; color: #666; font-weight: bold; }
+        /* Footer das Estrelas - 95% da largura */
+        .star-footer {
+            width: 95%; 
+            height: 100px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-top: 10px;
+        }
 
-        /* Indicadores de Feedback */
+        .star-btn {
+            background: none; 
+            border: none; 
+            font-size: 80px; /* Estrelas gigantes */
+            color: #333; /* Estrela vazia (cinza escuro) */
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.1s, transform 0.1s;
+        }
+
+        .star-btn:active { transform: scale(1.2); }
+        .star-btn.active { color: #fff; } /* Estrela preenchida (branco) */
+
+        /* Feedback visual no swipe */
         .status-label {
-            position: absolute; top: 40px; padding: 10px 20px; border: 4px solid;
-            border-radius: 10px; font-size: 2rem; font-weight: bold; text-transform: uppercase;
-            opacity: 0; pointer-events: none; z-index: 10;
+            position: absolute; top: 350px; padding: 20px; border: 5px solid;
+            border-radius: 10px; font-size: 4rem; font-weight: bold;
+            opacity: 0; pointer-events: none; z-index: 10; text-transform: uppercase;
         }
-        .like { color: #4caf50; border-color: #4caf50; left: 20px; transform: rotate(-20deg); }
-        .nope { color: #f44336; border-color: #f44336; right: 20px; transform: rotate(20deg); }
+        .like { color: #fff; border-color: #fff; left: 100px; }
+        .nope { color: #444; border-color: #444; right: 100px; }
     </style>
 </head>
 <body>
 
-    <h1>Meu Catálogo</h1>
-    <button id="auth_button" onclick="handleAuthClick()">Conectar com Google Drive</button>
+    <button id="auth_button" onclick="handleAuthClick()">ENTRAR NO CATÁLOGO</button>
     
-    <div id="catalog-container">
-        </div>
+    <div id="catalog-container"></div>
 
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.readonly';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.readonly';
+        
+        const FOLDER_DESTINATIONS = {
+            1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH',
+            2: '1hQNmdtdyOcI4qjP6uIqv37Q4qY7JIFGX',
+            3: '1HwsVXHF9I6tA5RfzmDT7L9BBo84lTJTL',
+            4: '1NWh7zR7V5c0qSqb2XyYUS_SJ2F8ojY6R',
+            5: '1Auv1qacvBwtQBIZSNJvkblm5XogsSxo_'
+        };
 
         let tokenClient;
         let gapiInited = false;
         let gsisInited = false;
 
-        function gapiLoaded() { gapi.load('client', initializeGapiClient); }
-        async function initializeGapiClient() {
-            await gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
-            gapiInited = true;
-            maybeEnableButtons();
-        }
+        function gapiLoaded() { gapi.load('client', () => {
+            gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
+            .then(() => { gapiInited = true; maybeEnableButtons(); });
+        });}
+
         function initTokenClient() {
             tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' });
             gsisInited = true;
             maybeEnableButtons();
         }
+
         function maybeEnableButtons() {
-            if (gapiInited && gsisInited) document.getElementById('auth_button').style.display = 'inline-block';
+            if (gapiInited && gsisInited) document.getElementById('auth_button').style.display = 'block';
         }
 
         function handleAuthClick() {
             tokenClient.callback = async (resp) => {
-                if (resp.error !== undefined) throw (resp);
                 document.getElementById('auth_button').style.display = 'none';
+                document.getElementById('catalog-container').style.display = 'block';
                 await listPhotos();
             };
-            tokenClient.requestAccessToken({prompt: gapi.client.getToken() === null ? 'consent' : ''});
+            tokenClient.requestAccessToken({prompt: 'consent'});
         }
 
         async function listPhotos() {
-            try {
-                const response = await gapi.client.drive.files.list({
-                    'pageSize': 50,
-                    'fields': 'files(id, name, thumbnailLink)',
-                    'q': "mimeType contains 'image/'"
-                });
-                renderStack(response.result.files);
-            } catch (err) { alert(err.message); }
+            const response = await gapi.client.drive.files.list({
+                'pageSize': 30,
+                'fields': 'files(id, name, thumbnailLink, parents)',
+                'q': "mimeType contains 'image/' and trashed = false"
+            });
+            renderStack(response.result.files);
         }
 
         function renderStack(files) {
-    const container = document.getElementById('tinder-container');
-    container.innerHTML = '';
-    
-    if (!files || files.length === 0) {
-        container.innerHTML = "Fim do catálogo!";
-        return;
-    }
+            const container = document.getElementById('catalog-container');
+            container.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.zIndex = files.length - index;
+                
+                // Força miniatura de alta qualidade
+                const imgUrl = file.thumbnailLink.replace('=s220', '=s800');
 
-    files.forEach((file, index) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.zIndex = files.length - index;
-        
-        const highResThumb = file.thumbnailLink.replace('=s220', '=s800');
-
-        card.innerHTML = `
-            <div class="status-label like">5 Estrelas</div>
-            <div class="status-label nope">0 Estrelas</div>
-            <img src="${highResThumb}">
-            <div class="card-info">${file.name}</div>
-            <div class="star-bar" onpointerdown="event.stopPropagation()">
-                <button class="star-btn" data-val="0" onclick="rateFromButton(this, 0, '${file.id}')">0</button>
-                <button class="star-btn" onclick="rateFromButton(this, 1, '${file.id}')">⭐</button>
-                <button class="star-btn" onclick="rateFromButton(this, 2, '${file.id}')">⭐</button>
-                <button class="star-btn" onclick="rateFromButton(this, 3, '${file.id}')">⭐</button>
-                <button class="star-btn" onclick="rateFromButton(this, 4, '${file.id}')">⭐</button>
-                <button class="star-btn" onclick="rateFromButton(this, 5, '${file.id}')">⭐</button>
-            </div>
-        `;
-        
-        setupSwipe(card, file.id);
-        container.appendChild(card);
-    });
-}
-
-// Função acionada ao clicar nas estrelas
-function rateFromButton(btnElement, rating, fileId) {
-    // Encontra o cartão atual a partir do botão clicado
-    const card = btnElement.closest('.card');
-    
-    // Anima o cartão para baixo simulando que foi guardado
-    finishSwipe(card, rating, fileId, 'translate(0, 800px) scale(0.8)');
-}
+                card.innerHTML = `
+                    <div class="status-label like">5 ★</div>
+                    <div class="status-label nope">1 ★</div>
+                    <img src="${imgUrl}">
+                    <div class="star-footer" onpointerdown="event.stopPropagation()">
+                        ${[1,2,3,4,5].map(num => `
+                            <button class="star-btn" onclick="rateAndMove('${file.id}', ${num}, this)">★</button>
+                        `).join('')}
+                    </div>
+                `;
+                
+                setupSwipe(card, file.id);
+                container.appendChild(card);
+            });
+        }
 
         function setupSwipe(el, fileId) {
             const hammer = new Hammer(el);
@@ -161,43 +187,57 @@ function rateFromButton(btnElement, rating, fileId) {
 
             hammer.on('pan', (e) => {
                 el.style.transition = 'none';
-                const x = e.deltaX;
-                const rotation = x / 15;
-                el.style.transform = `translateX(${x}px) rotate(${rotation}deg)`;
-
-                // Feedback visual das etiquetas
-                if (x > 50) { likeLabel.style.opacity = x / 150; nopeLabel.style.opacity = 0; }
-                else if (x < -50) { nopeLabel.style.opacity = Math.abs(x) / 150; likeLabel.style.opacity = 0; }
-                else { likeLabel.style.opacity = 0; nopeLabel.style.opacity = 0; }
+                el.style.transform = `translateX(${e.deltaX}px) rotate(${e.deltaX / 20}deg)`;
+                if (e.deltaX > 50) { likeLabel.style.opacity = e.deltaX / 200; }
+                else if (e.deltaX < -50) { nopeLabel.style.opacity = Math.abs(e.deltaX) / 200; }
             });
 
             hammer.on('panend', (e) => {
                 el.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-                if (e.deltaX > 150) {
-                    finishSwipe(el, 5, fileId, 'translate(1000px, 0) rotate(45deg)');
-                } else if (e.deltaX < -150) {
-                    finishSwipe(el, 1, fileId, 'translate(-1000px, 0) rotate(-45deg)');
-                } else {
+                if (e.deltaX > 200) { animateOut(el, fileId, 5, 1000); }
+                else if (e.deltaX < -200) { animateOut(el, fileId, 1, -1000); }
+                else {
                     el.style.transform = '';
-                    likeLabel.style.opacity = 0;
-                    nopeLabel.style.opacity = 0;
+                    likeLabel.style.opacity = 0; nopeLabel.style.opacity = 0;
                 }
             });
         }
 
-        async function finishSwipe(el, rating, fileId, transformStr) {
-            el.style.transform = transformStr;
-            el.style.opacity = '0';
-            setTimeout(() => el.remove(), 400);
+        async function rateAndMove(fileId, rating, btn) {
+            const card = btn.closest('.card');
+            // Feedback visual imediato nas estrelas
+            const stars = card.querySelectorAll('.star-btn');
+            stars.forEach((s, idx) => s.classList.toggle('active', idx < rating));
             
-            // Grava no Google Drive as "Properties"
+            // Animação de saída (para baixo)
+            animateOut(card, fileId, rating, 0, 800);
+        }
+
+        async function animateOut(el, fileId, rating, x, y = 0) {
+            el.style.transform = `translate(${x}px, ${y}px) rotate(${x/10}deg)`;
+            el.style.opacity = '0';
+            
+            // Lógica de Movimentação no Drive
             try {
+                // 1. Pega a pasta atual para remover
+                const fileData = await gapi.client.drive.files.get({ fileId: fileId, fields: 'parents' });
+                const oldParents = fileData.result.parents ? fileData.result.parents.join(',') : '';
+                const newParent = FOLDER_DESTINATIONS[rating];
+
+                // 2. Move e Atualiza Metadado
                 await gapi.client.drive.files.update({
                     fileId: fileId,
+                    addParents: newParent,
+                    removeParents: oldParents,
                     resource: { properties: { 'star_rating': rating.toString() } }
                 });
-                console.log(`Foto ${fileId} marcada com ${rating} estrelas`);
-            } catch (err) { console.error("Erro ao salvar:", err); }
+                console.log(`Sucesso: ${fileId} -> Folder ${rating}`);
+            } catch (e) { console.error("Erro na API:", e); }
+
+            setTimeout(() => {
+                el.remove();
+                if (document.querySelectorAll('.card').length === 0) listPhotos();
+            }, 400);
         }
     </script>
 </body>
