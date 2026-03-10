@@ -31,26 +31,33 @@
             cursor: pointer;
         }
 
-        /* Botão de Refresh fixo no topo */
+        /* Barra de Topo com Botões Dinâmicos */
         #top-bar {
             position: fixed;
             top: 20px;
             z-index: 999999;
             display: none; /* Aparece após o login */
             width: 100%;
-            text-align: center;
+            justify-content: center;
+            gap: 15px; /* Espaço entre os botões */
         }
 
-        #refresh_button_top {
+        .top-btn {
             padding: 10px 20px;
-            background: #28a745;
             color: #fff;
             border: none;
             border-radius: 25px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-size: 0.9rem;
+            transition: transform 0.2s ease;
         }
+        
+        .top-btn:active { transform: scale(0.95); }
+
+        #refresh_button_top { background: #28a745; }
+        #undo_button_top { background: #dc3545; display: none; /* Oculto até haver ações */ }
 
         /* Container Responsivo */
         #tinder-container { 
@@ -79,6 +86,7 @@
             aspect-ratio: 1 / 1; 
             object-fit: cover;
             pointer-events: none;
+            border-radius: 8px; /* Cantos levemente arredondados pra estética */
         }
 
         /* Footer das Estrelas */
@@ -97,6 +105,7 @@
             color: #222; 
             cursor: pointer;
             padding: 0;
+            transition: color 0.2s ease;
         }
 
         .star-btn.active { color: #fff; }
@@ -142,10 +151,11 @@
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA 1515</button>
+    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
     
     <div id="top-bar">
-        <button id="refresh_button_top" onclick="reloadFolder()">🔄 SINCRONIZAR NOVOS ARQUIVOS</button>
+        <button id="undo_button_top" class="top-btn" onclick="undoLastAction()">↩️ DESFAZER</button>
+        <button id="refresh_button_top" class="top-btn" onclick="reloadFolder()">🔄 SINCRONIZAR NOVOS</button>
     </div>
 
     <div id="tinder-container">
@@ -157,8 +167,6 @@
 
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
-        
-        // CORREÇÃO 1: Permissão total de edição para conseguir mover arquivos que não foram criados pelo app
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
         
         // --- CONFIGURAÇÃO DE PASTAS ---
@@ -178,7 +186,10 @@
         let nextPageToken = null;
         let isFetching = false;
         let currentZIndex = 100000; 
+        let undoZIndex = 200000; // Garante que a foto desfeita apareça na frente de tudo
+        
         const processedIds = new Set(); 
+        let actionHistory = []; // Guarda as ações para permitir o "Desfazer"
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -199,10 +210,10 @@
             tokenClient.callback = async (resp) => {
                 document.getElementById('auth_button').style.display = 'none';
                 document.getElementById('tinder-container').style.display = 'block';
-                document.getElementById('top-bar').style.display = 'block'; // Mostra a barra do topo
+                document.getElementById('top-bar').style.display = 'flex'; 
                 await listPhotos();
             };
-            tokenClient.requestAccessToken({prompt: 'consent'}); // Força o consentimento para aceitar o novo escopo
+            tokenClient.requestAccessToken({prompt: 'consent'}); 
         }
 
         async function listPhotos() {
@@ -210,7 +221,6 @@
             isFetching = true;
             document.getElementById('end-screen').style.display = 'none';
 
-            // Adicionado um timestamp falso (bypass temporário de cache local da API)
             const query = `'${SOURCE_FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`;
             const requestParams = {
                 'pageSize': 100, 
@@ -251,22 +261,8 @@
                 processedIds.add(file.id);
                 addedCount++;
 
-                const card = document.createElement('div');
-                card.className = 'card';
+                const card = createCardElement(file.id, file.thumbnailLink.replace('=s220', '=s800'));
                 card.style.zIndex = currentZIndex--; 
-                const imgUrl = file.thumbnailLink.replace('=s220', '=s800');
-
-                card.innerHTML = `
-                    <div class="status-label like">TOP</div>
-                    <div class="status-label nope">LIXO</div>
-                    <img src="${imgUrl}">
-                    <div class="star-footer" onpointerdown="event.stopPropagation()">
-                        ${[1,2,3,4,5].map(num => `
-                            <button class="star-btn" onclick="rateAndMove('${file.id}', ${num}, this)">★</button>
-                        `).join('')}
-                    </div>
-                `;
-                setupSwipe(card, file.id);
                 container.appendChild(card);
             });
 
@@ -277,6 +273,24 @@
                     endScreen.style.display = 'flex';
                 }
             }
+        }
+
+        // Função isolada para criar a estrutura do card HTML (usada ao puxar fotos novas e ao desfazer)
+        function createCardElement(fileId, imgUrl) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="status-label like">TOP</div>
+                <div class="status-label nope">LIXO</div>
+                <img src="${imgUrl}">
+                <div class="star-footer" onpointerdown="event.stopPropagation()">
+                    ${[1,2,3,4,5].map(num => `
+                        <button class="star-btn" onclick="rateAndMove('${fileId}', ${num}, this)">★</button>
+                    `).join('')}
+                </div>
+            `;
+            setupSwipe(card, fileId);
+            return card;
         }
 
         function setupSwipe(el, fileId) {
@@ -312,19 +326,23 @@
         async function animateOut(el, fileId, rating, x, y = 0) {
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
+            const imgUrl = el.querySelector('img').src;
             
             try {
                 const newParent = FOLDER_DESTINATIONS[rating];
-                // Await adicionado e remoção da injeção forçada de propriedades que causava erro 400
                 await gapi.client.drive.files.update({
                     fileId: fileId,
                     addParents: newParent,
                     removeParents: SOURCE_FOLDER_ID
                 });
+                
+                // Salva no histórico APÓS o sucesso do Google Drive
+                actionHistory.push({ fileId: fileId, destination: newParent, imgUrl: imgUrl });
+                updateUndoButtonState();
                 console.log(`Sucesso: Arquivo movido para pasta ${rating}`);
             } catch (e) { 
-                console.error("Falha Crítica ao mover. Verifique se tem acesso total ao arquivo:", e); 
-                alert("ERRO AO MOVER PARA O DRIVE! O arquivo continua na origem. Verifique se a permissão na nuvem foi atualizada para /auth/drive.");
+                console.error("Erro ao mover:", e); 
+                alert("ERRO AO MOVER PARA O DRIVE! O arquivo continua na origem.");
             }
 
             setTimeout(() => {
@@ -333,26 +351,84 @@
             }, 400);
         }
 
+        // ---- LÓGICA DE DESFAZER AÇÃO ----
+        async function undoLastAction() {
+            if (actionHistory.length === 0) return;
+            
+            // Pega a última ação da array de histórico
+            const lastAction = actionHistory.pop();
+            updateUndoButtonState();
+
+            // Devolve o arquivo para a pasta origem no Drive
+            try {
+                await gapi.client.drive.files.update({
+                    fileId: lastAction.fileId,
+                    addParents: SOURCE_FOLDER_ID,
+                    removeParents: lastAction.destination
+                });
+                console.log(`Desfeito: Arquivo retornou à origem.`);
+            } catch (e) {
+                console.error("Erro ao desfazer ação no Drive:", e);
+                alert("Não foi possível devolver o arquivo à origem no Drive.");
+                return; // Se falhou a volta, aborta para não criar erro de sincronia
+            }
+
+            // Remove o ID do Set de "processados" pra ele não ser ignorado
+            processedIds.delete(lastAction.fileId);
+
+            // Tira a tela de 'vazio' caso ela esteja visível
+            document.getElementById('end-screen').style.display = 'none';
+
+            // Recria a carta visualmente
+            const container = document.getElementById('tinder-container');
+            const card = createCardElement(lastAction.fileId, lastAction.imgUrl);
+            
+            // Coloca ela garantidamente no topo da pilha atual
+            card.style.zIndex = undoZIndex++; 
+            
+            // Animação de entrada (surgindo no meio da tela)
+            card.style.transform = 'scale(0.8)';
+            card.style.opacity = '0';
+            container.appendChild(card);
+
+            // Força a renderização do frame para a transição acontecer suavemente
+            requestAnimationFrame(() => {
+                card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+            });
+        }
+
+        // Controla se o botão de "Desfazer" deve aparecer
+        function updateUndoButtonState() {
+            const undoBtn = document.getElementById('undo_button_top');
+            if (actionHistory.length > 0) {
+                undoBtn.style.display = 'inline-block';
+            } else {
+                undoBtn.style.display = 'none';
+            }
+        }
+
         function checkAndFetchMore() {
             const remainingCards = document.querySelectorAll('.card').length;
             
             if (remainingCards <= 50 && nextPageToken) {
                 listPhotos();
             } else if (remainingCards === 0 && !nextPageToken) {
-                // Se chegar a zero e não houver página seguinte, garante que a tela final apareça
                 document.getElementById('end-screen').style.display = 'flex';
             }
         }
 
         function reloadFolder() {
-            // Limpa as cartas remanescentes da tela para não duplicar visualmente
             const container = document.getElementById('tinder-container');
             const cards = container.querySelectorAll('.card');
             cards.forEach(c => c.remove());
             
-            // Reseta toda a lógica de busca para recomeçar do zero
             nextPageToken = null; 
             processedIds.clear();
+            actionHistory = []; // Ao recarregar do zero, perde-se o histórico antigo
+            updateUndoButtonState();
+            
             document.getElementById('end-screen').style.display = 'none'; 
             listPhotos(); 
         }
