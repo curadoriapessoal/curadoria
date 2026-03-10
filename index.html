@@ -63,7 +63,8 @@
             aspect-ratio: 1 / 1; 
             display: none;
             transition: opacity 0.3s ease; 
-        }
+            transform: translateY(-10vh); /* ADICIONE ESTA LINHA */
+        }}
 
         .card { 
             position: absolute; 
@@ -252,7 +253,7 @@
         </div>
 
         <div id="hide-strip">
-            <button id="hide-btn" onclick="toggleVisibility()">Ocultar Tela</button>
+            <button id="hide-btn" onclick="toggleVisibility()">Privacidade</button>
         </div>
         
     </div>
@@ -317,7 +318,7 @@
         function toggleVisibility() {
             const container = document.getElementById('catalog-container');
             isScreenHidden = !isScreenHidden;
-            container.style.opacity = isScreenHidden ? '0.1' : '1';
+            container.style.opacity = isScreenHidden ? '0.01' : '1';
         }
 
         // --- CONTAGEM E BUSCA ---
