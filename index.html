@@ -3,7 +3,7 @@
 <head>
     <title>Curadoria Pro</title>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
@@ -31,33 +31,35 @@
             cursor: pointer;
         }
 
-        /* Barra de Topo com Botões Dinâmicos */
-        #top-bar {
+        /* Barra Inferior Dinâmica (Zona do Polegar) */
+        #bottom-bar {
             position: fixed;
-            top: 20px;
+            bottom: max(30px, env(safe-area-inset-bottom)); /* Respeita a barra de navegação do iOS/Android */
             z-index: 999999;
             display: none; /* Aparece após o login */
             width: 100%;
             justify-content: center;
             gap: 15px; /* Espaço entre os botões */
+            pointer-events: none; /* Permite clicar através da div invisível */
         }
 
-        .top-btn {
-            padding: 10px 20px;
+        .action-btn {
+            pointer-events: auto; /* Reativa o clique apenas nos botões */
+            padding: 12px 20px;
             color: #fff;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            font-size: 0.95rem;
             transition: transform 0.2s ease;
         }
         
-        .top-btn:active { transform: scale(0.95); }
+        .action-btn:active { transform: scale(0.95); }
 
-        #refresh_button_top { background: #28a745; }
-        #undo_button_top { background: #dc3545; display: none; /* Oculto até haver ações */ }
+        #refresh_button_action { background: #28a745; }
+        #undo_button { background: #dc3545; display: none; /* Oculto até haver ações */ }
 
         /* Container Responsivo */
         #tinder-container { 
@@ -119,7 +121,7 @@
         .like { color: #fff; border-color: #fff; left: 10px; }
         .nope { color: #444; border-color: #444; right: 10px; }
         
-        /* Mensagem de Fim e Botão de Refresh */
+        /* Mensagem de Fim e Botão de Refresh central */
         #end-screen {
             position: absolute;
             top: 40%;
@@ -151,18 +153,18 @@
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
+    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA 1538</button>
     
-    <div id="top-bar">
-        <button id="undo_button_top" class="top-btn" onclick="undoLastAction()">↩️ DESFAZER</button>
-        <button id="refresh_button_top" class="top-btn" onclick="reloadFolder()">🔄 SINCRONIZAR NOVOS</button>
-    </div>
-
     <div id="tinder-container">
         <div id="end-screen">
             <div id="empty-message">A pasta está vazia ou os arquivos acabaram!</div>
             <button id="refresh_button" onclick="reloadFolder()">BUSCAR NOVAS FOTOS</button>
         </div>
+    </div>
+
+    <div id="bottom-bar">
+        <button id="undo_button" class="action-btn" onclick="undoLastAction()">↩️ DESFAZER</button>
+        <button id="refresh_button_action" class="action-btn" onclick="reloadFolder()">🔄 SINCRONIZAR NOVOS</button>
     </div>
 
     <script type="text/javascript">
@@ -186,10 +188,10 @@
         let nextPageToken = null;
         let isFetching = false;
         let currentZIndex = 100000; 
-        let undoZIndex = 200000; // Garante que a foto desfeita apareça na frente de tudo
+        let undoZIndex = 200000; 
         
         const processedIds = new Set(); 
-        let actionHistory = []; // Guarda as ações para permitir o "Desfazer"
+        let actionHistory = []; 
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -210,7 +212,7 @@
             tokenClient.callback = async (resp) => {
                 document.getElementById('auth_button').style.display = 'none';
                 document.getElementById('tinder-container').style.display = 'block';
-                document.getElementById('top-bar').style.display = 'flex'; 
+                document.getElementById('bottom-bar').style.display = 'flex'; 
                 await listPhotos();
             };
             tokenClient.requestAccessToken({prompt: 'consent'}); 
@@ -275,7 +277,6 @@
             }
         }
 
-        // Função isolada para criar a estrutura do card HTML (usada ao puxar fotos novas e ao desfazer)
         function createCardElement(fileId, imgUrl) {
             const card = document.createElement('div');
             card.className = 'card';
@@ -336,7 +337,6 @@
                     removeParents: SOURCE_FOLDER_ID
                 });
                 
-                // Salva no histórico APÓS o sucesso do Google Drive
                 actionHistory.push({ fileId: fileId, destination: newParent, imgUrl: imgUrl });
                 updateUndoButtonState();
                 console.log(`Sucesso: Arquivo movido para pasta ${rating}`);
@@ -351,15 +351,12 @@
             }, 400);
         }
 
-        // ---- LÓGICA DE DESFAZER AÇÃO ----
         async function undoLastAction() {
             if (actionHistory.length === 0) return;
             
-            // Pega a última ação da array de histórico
             const lastAction = actionHistory.pop();
             updateUndoButtonState();
 
-            // Devolve o arquivo para a pasta origem no Drive
             try {
                 await gapi.client.drive.files.update({
                     fileId: lastAction.fileId,
@@ -370,28 +367,20 @@
             } catch (e) {
                 console.error("Erro ao desfazer ação no Drive:", e);
                 alert("Não foi possível devolver o arquivo à origem no Drive.");
-                return; // Se falhou a volta, aborta para não criar erro de sincronia
+                return; 
             }
 
-            // Remove o ID do Set de "processados" pra ele não ser ignorado
             processedIds.delete(lastAction.fileId);
-
-            // Tira a tela de 'vazio' caso ela esteja visível
             document.getElementById('end-screen').style.display = 'none';
 
-            // Recria a carta visualmente
             const container = document.getElementById('tinder-container');
             const card = createCardElement(lastAction.fileId, lastAction.imgUrl);
             
-            // Coloca ela garantidamente no topo da pilha atual
             card.style.zIndex = undoZIndex++; 
-            
-            // Animação de entrada (surgindo no meio da tela)
             card.style.transform = 'scale(0.8)';
             card.style.opacity = '0';
             container.appendChild(card);
 
-            // Força a renderização do frame para a transição acontecer suavemente
             requestAnimationFrame(() => {
                 card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
                 card.style.transform = 'scale(1)';
@@ -399,9 +388,8 @@
             });
         }
 
-        // Controla se o botão de "Desfazer" deve aparecer
         function updateUndoButtonState() {
-            const undoBtn = document.getElementById('undo_button_top');
+            const undoBtn = document.getElementById('undo_button');
             if (actionHistory.length > 0) {
                 undoBtn.style.display = 'inline-block';
             } else {
@@ -426,7 +414,7 @@
             
             nextPageToken = null; 
             processedIds.clear();
-            actionHistory = []; // Ao recarregar do zero, perde-se o histórico antigo
+            actionHistory = []; 
             updateUndoButtonState();
             
             document.getElementById('end-screen').style.display = 'none'; 
