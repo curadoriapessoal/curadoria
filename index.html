@@ -20,6 +20,7 @@
             justify-content: center;
             height: 100vh;
             width: 100vw;
+            flex-direction: column;
         }
 
         #auth_button { 
@@ -33,9 +34,9 @@
         /* Container Responsivo */
         #tinder-container { 
             position: relative; 
-            width: 90vw; /* 90% da largura da tela */
+            width: 90vw; 
             max-width: 800px; 
-            aspect-ratio: 1 / 1.2; /* Espaço para foto quadrada + estrelas */
+            aspect-ratio: 1 / 1.2; 
             display: none;
         }
 
@@ -54,12 +55,12 @@
 
         .card img { 
             width: 100%; 
-            aspect-ratio: 1 / 1; /* Garante o quadrado 800x800 proporcional */
+            aspect-ratio: 1 / 1; 
             object-fit: cover;
             pointer-events: none;
         }
 
-        /* Footer das Estrelas ocupando 95% da largura da foto */
+        /* Footer das Estrelas */
         .star-footer {
             width: 95%; 
             display: flex; 
@@ -70,7 +71,7 @@
         .star-btn {
             background: none; 
             border: none; 
-            font-size: 12vw; /* Escala com a tela do celular */
+            font-size: 12vw; 
             max-size: 80px;
             color: #222; 
             cursor: pointer;
@@ -88,15 +89,33 @@
         .like { color: #fff; border-color: #fff; left: 10px; }
         .nope { color: #444; border-color: #444; right: 10px; }
         
-        /* Mensagem de Fim/Vazio */
-        #empty-message {
+        /* Mensagem de Fim e Botão de Refresh */
+        #end-screen {
             position: absolute;
+            top: 40%;
             width: 100%;
-            text-align: center;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            z-index: 0;
+        }
+
+        #empty-message {
             font-size: 1.5rem;
             color: #888;
-            top: 40%;
-            display: none;
+            text-align: center;
+        }
+
+        #refresh_button {
+            padding: 15px 30px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
         }
     </style>
 </head>
@@ -105,7 +124,10 @@
     <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
     
     <div id="tinder-container">
-        <div id="empty-message">A pasta está vazia ou os arquivos acabaram!</div>
+        <div id="end-screen">
+            <div id="empty-message">A pasta está vazia ou os arquivos acabaram!</div>
+            <button id="refresh_button" onclick="reloadFolder()">BUSCAR NOVAS FOTOS</button>
+        </div>
     </div>
 
     <script type="text/javascript">
@@ -113,7 +135,7 @@
         const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.readonly';
         
         // --- CONFIGURAÇÃO DE PASTAS ---
-        const SOURCE_FOLDER_ID = '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd'; 
+        const SOURCE_FOLDER_ID = 'COLE_AQUI_O_ID_DA_PASTA_ORIGEM'; 
         const FOLDER_DESTINATIONS = {
             1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH',
             2: '1hQNmdtdyOcI4qjP6uIqv37Q4qY7JIFGX',
@@ -126,11 +148,10 @@
         let gapiInited = false;
         let gsisInited = false;
 
-        // Controle de paginação e renderização
         let nextPageToken = null;
         let isFetching = false;
-        let currentZIndex = 100000; // Começa alto para as novas imagens irem sendo colocadas atrás
-        const processedIds = new Set(); // Evita re-renderizar fotos por conta do delay da API
+        let currentZIndex = 100000; 
+        const processedIds = new Set(); 
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -159,11 +180,12 @@
         async function listPhotos() {
             if (isFetching) return;
             isFetching = true;
+            document.getElementById('end-screen').style.display = 'none';
 
             const query = `'${SOURCE_FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`;
             const requestParams = {
-                'pageSize': 100, // Ajustado para 100 conforme solicitado
-                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents)', // Adicionado nextPageToken
+                'pageSize': 100, 
+                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents)', 
                 'q': query
             };
 
@@ -174,7 +196,6 @@
             try {
                 const response = await gapi.client.drive.files.list(requestParams);
                 nextPageToken = response.result.nextPageToken || null;
-                
                 addCardsToStack(response.result.files);
             } catch (e) { 
                 console.error("Erro na busca:", e); 
@@ -185,25 +206,26 @@
 
         function addCardsToStack(files) {
             const container = document.getElementById('tinder-container');
-            const emptyMsg = document.getElementById('empty-message');
+            const endScreen = document.getElementById('end-screen');
 
+            // Se a API não retornar arquivos e a tela estiver vazia, exibe a tela de refresh
             if (!files || files.length === 0) { 
                 if (document.querySelectorAll('.card').length === 0) {
-                    emptyMsg.style.display = 'block';
+                    endScreen.style.display = 'flex';
                 }
                 return; 
             }
 
-            emptyMsg.style.display = 'none';
+            let addedCount = 0;
 
             files.forEach((file) => {
-                // Se a foto já passou pela tela, pula para evitar duplicidade de delay do Drive
                 if (processedIds.has(file.id)) return;
                 processedIds.add(file.id);
+                addedCount++;
 
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.style.zIndex = currentZIndex--; // Novas fotos vão pra trás
+                card.style.zIndex = currentZIndex--; 
                 const imgUrl = file.thumbnailLink.replace('=s220', '=s800');
 
                 card.innerHTML = `
@@ -219,6 +241,16 @@
                 setupSwipe(card, file.id);
                 container.appendChild(card);
             });
+
+            // Se os arquivos retornados já tinham sido processados e a tela continua vazia
+            if (addedCount === 0 && document.querySelectorAll('.card').length === 0) {
+                if (nextPageToken) {
+                    // Continua buscando na próxima página invisivelmente
+                    listPhotos();
+                } else {
+                    endScreen.style.display = 'flex';
+                }
+            }
         }
 
         function setupSwipe(el, fileId) {
@@ -257,7 +289,6 @@
             
             try {
                 const newParent = FOLDER_DESTINATIONS[rating];
-                // Requisição assíncrona não trava a tela para o próximo swipe
                 gapi.client.drive.files.update({
                     fileId: fileId,
                     addParents: newParent,
@@ -275,12 +306,18 @@
         function checkAndFetchMore() {
             const remainingCards = document.querySelectorAll('.card').length;
             
-            // Quando os cards caírem para 50 (ou se zera e ainda há paginação), baixa as próximas imagens de fundo
             if (remainingCards <= 50 && nextPageToken) {
                 listPhotos();
             } else if (remainingCards === 0 && !nextPageToken) {
-                document.getElementById('empty-message').style.display = 'block';
+                document.getElementById('end-screen').style.display = 'flex';
             }
+        }
+
+        // Função do botão para varrer a pasta novamente em busca de novos arquivos
+        function reloadFolder() {
+            nextPageToken = null; // Reseta a paginação para voltar do início
+            document.getElementById('end-screen').style.display = 'none'; // Esconde o aviso e o botão
+            listPhotos(); // Dispara a busca novamente
         }
     </script>
 </body>
