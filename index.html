@@ -1,1 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meu Catálogo</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #auth_button { padding: 15px 25px; font-size: 18px; cursor: pointer; display: none; }
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+        .photo-card { border: 1px solid #ddd; padding: 5px; border-radius: 8px; }
+        img { max-width: 200px; border-radius: 5px; }
+    </style>
+</head>
+<body>
 
+    <h1>Catálogo de Fotos - Teste de Conexão</h1>
+    <button id="auth_button" onclick="handleAuthClick()">Conectar com Google Drive</button>
+    <div id="content"></div>
+    <div class="gallery" id="gallery"></div>
+
+    <script type="text/javascript">
+        // --- CONFIGURAÇÃO ---
+        const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.readonly';
+        // --------------------
+
+        let tokenClient;
+        let gapiInited = false;
+        let gsisInited = false;
+
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            await gapi.client.init({
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+
+        function initTokenClient() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // definido na hora do clique
+            });
+            gsisInited = true;
+            maybeEnableButtons();
+        }
+
+        function maybeEnableButtons() {
+            if (gapiInited && gsisInited) {
+                document.getElementById('auth_button').style.display = 'inline-block';
+            }
+        }
+
+        function handleAuthClick() {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) throw (resp);
+                await listPhotos();
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                tokenClient.requestAccessToken({prompt: ''});
+            }
+        }
+
+        async function listPhotos() {
+            try {
+                // Busca apenas arquivos que são imagens
+                const response = await gapi.client.drive.files.list({
+                    'pageSize': 10,
+                    'fields': 'files(id, name, thumbnailLink)',
+                    'q': "mimeType contains 'image/'"
+                });
+
+                const files = response.result.files;
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+
+                if (files && files.length > 0) {
+                    files.forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = 'photo-card';
+                        div.innerHTML = `
+                            <img src="${file.thumbnailLink.replace('=s220', '=s500')}" />
+                            <p>${file.name}</p>
+                        `;
+                        gallery.appendChild(div);
+                    });
+                } else {
+                    document.getElementById('content').innerText = 'Nenhuma foto encontrada.';
+                }
+            } catch (err) {
+                document.getElementById('content').innerText = err.message;
+            }
+        }
+    </script>
+</body>
+</html>
