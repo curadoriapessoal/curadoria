@@ -21,6 +21,7 @@
             height: 100vh;
             width: 100vw;
             flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         #auth_button { 
@@ -29,6 +30,7 @@
             border-radius: 50px; 
             font-weight: bold;
             cursor: pointer;
+            color: #000;
         }
 
         /* Contador no Topo */
@@ -38,61 +40,30 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 999999;
-            background: rgba(30, 30, 30, 0.8);
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: bold;
             color: #ccc;
-            display: none; /* Aparece após login */
+            display: none; 
             white-space: nowrap;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
         }
 
-        #top-counter span {
-            color: #fff;
-            font-size: 1.1rem;
-            margin-left: 5px;
-        }
+        #top-counter span { color: #fff; font-size: 1rem; margin-left: 5px; }
 
-        /* Barra Inferior Dinâmica (Zona do Polegar) */
-        #bottom-bar {
-            position: fixed;
-            bottom: max(30px, env(safe-area-inset-bottom));
-            z-index: 999999;
-            display: none; 
-            width: 100%;
-            justify-content: center;
-            gap: 15px; 
-            pointer-events: none; 
-        }
-
-        .action-btn {
-            pointer-events: auto; 
-            padding: 12px 20px;
-            color: #fff;
-            border: none;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-            font-size: 0.95rem;
-            transition: transform 0.2s ease;
-        }
-        
-        .action-btn:active { transform: scale(0.95); }
-
-        #refresh_button_action { background: #28a745; }
-        #undo_button { background: #dc3545; display: none; }
-
-        /* Container Responsivo */
+        /* Container da Foto */
         #tinder-container { 
             position: relative; 
-            width: 90vw; 
-            max-width: 800px; 
-            aspect-ratio: 1 / 1.2; 
+            width: 95vw; 
+            max-width: 600px; 
+            aspect-ratio: 1 / 1; /* Quadrado Perfeito sem as estrelas antigas */
             display: none;
+            transition: opacity 0.3s ease; /* Transição para o botão Ocultar */
         }
 
         .card { 
@@ -103,53 +74,142 @@
             display: flex; 
             flex-direction: column; 
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             transition: transform 0.3s ease, opacity 0.3s ease; 
             touch-action: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
 
         .card img { 
             width: 100%; 
-            aspect-ratio: 1 / 1; 
+            height: 100%;
             object-fit: cover;
             pointer-events: none;
-            border-radius: 8px; 
         }
 
-        /* Footer das Estrelas */
-        .star-footer {
-            width: 95%; 
-            display: flex; 
-            justify-content: space-between; 
-            margin-top: 20px;
-        }
-
-        .star-btn {
-            background: none; 
-            border: none; 
-            font-size: 12vw; 
-            max-size: 80px;
-            color: #222; 
-            cursor: pointer;
-            padding: 0;
-            transition: color 0.2s ease;
-        }
-
-        .star-btn.active { color: #fff; }
-
-        /* Labels de Feedback */
+        /* Labels de Feedback Visual do Swipe */
         .status-label {
-            position: absolute; top: 40%; padding: 10px; border: 4px solid;
+            position: absolute; top: 10%; padding: 10px 20px; border: 4px solid;
             border-radius: 10px; font-size: 2rem; font-weight: bold;
             opacity: 0; z-index: 10; pointer-events: none;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.3);
         }
-        .like { color: #fff; border-color: #fff; left: 10px; }
-        .nope { color: #444; border-color: #444; right: 10px; }
+        .like { color: #4ade80; border-color: #4ade80; left: 10px; transform: rotate(-15deg); }
+        .nope { color: #f87171; border-color: #f87171; right: 10px; transform: rotate(15deg); }
+        .org { color: #60a5fa; border-color: #60a5fa; top: 40%; left: 50%; transform: translateX(-50%); }
         
-        /* Mensagem de Fim e Botão de Refresh central */
+        /* ---------------------------------------------------
+           UI FUTURISTA - LIQUID GLASS (BOTTOM CONTROLS) 
+           --------------------------------------------------- */
+        
+        #controls-wrapper {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 70px); /* Espaço para o botão ocultar */
+            left: 10px;
+            right: 10px;
+            display: none; /* Aparece com as fotos */
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 999999;
+            pointer-events: none; /* Permite clicar no fundo onde não há botão */
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        /* Estilo Base Liquid Glass */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+        }
+
+        .glass-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Botões do Lado Esquerdo (Largos e Empilhados) */
+        .btn-left-stack {
+            width: 130px;
+            padding: 12px 0;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .btn-undo { background: rgba(255, 193, 7, 0.15); border-color: rgba(255, 193, 7, 0.3); visibility: hidden; }
+        .btn-sync { background: rgba(232, 62, 140, 0.15); border-color: rgba(232, 62, 140, 0.3); }
+
+        /* Botões do Lado Direito (Verticais lado a lado) */
+        .btn-right-action {
+            width: 65px;
+            height: 80px;
+            flex-direction: column;
+            border-radius: 16px;
+            font-size: 0.65rem;
+            gap: 8px;
+        }
+        .btn-right-action .icon { font-size: 1.4rem; }
+        
+        .btn-red   { background: rgba(220, 53, 69, 0.2);  border-color: rgba(220, 53, 69, 0.4); }
+        .btn-blue  { background: rgba(13, 110, 253, 0.2); border-color: rgba(13, 110, 253, 0.4); }
+        .btn-green { background: rgba(40, 167, 69, 0.2);  border-color: rgba(40, 167, 69, 0.4); }
+
+        /* Botão Ocultar Tela (Centro Inferior) */
+        #hide-btn {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 15px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(128, 128, 128, 0.5); /* Cinza 50% */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 999999;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* Fim / Vazio */
         #end-screen {
             position: absolute;
-            top: 40%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 100%;
             display: none;
             flex-direction: column;
@@ -157,23 +217,7 @@
             gap: 20px;
             z-index: 0;
         }
-
-        #empty-message {
-            font-size: 1.5rem;
-            color: #888;
-            text-align: center;
-        }
-
-        #refresh_button {
-            padding: 15px 30px;
-            background: #28a745;
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 1rem;
-        }
+        #empty-message { font-size: 1.2rem; color: #888; text-align: center; }
     </style>
 </head>
 <body>
@@ -184,28 +228,40 @@
 
     <div id="tinder-container">
         <div id="end-screen">
-            <div id="empty-message">A pasta está vazia ou os arquivos acabaram!</div>
-            <button id="refresh_button" onclick="reloadFolder()">BUSCAR NOVAS FOTOS</button>
+            <div id="empty-message">Tudo limpo por aqui!</div>
         </div>
     </div>
 
-    <div id="bottom-bar">
-        <button id="undo_button" class="action-btn" onclick="undoLastAction()">↩️ DESFAZER</button>
-        <button id="refresh_button_action" class="action-btn" onclick="reloadFolder()">🔄 SINCRONIZAR NOVOS</button>
+    <div id="controls-wrapper">
+        <div class="left-panel">
+            <button id="undo_button" class="glass-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ Desfazer</button>
+            <button class="glass-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 Sincronizar</button>
+        </div>
+        
+        <div class="right-panel">
+            <button class="glass-btn btn-right-action btn-red" onclick="handleGlobalAction(1)">
+                <span class="icon">✖</span> Excluir
+            </button>
+            <button class="glass-btn btn-right-action btn-blue" onclick="handleGlobalAction(3)">
+                <span class="icon">📁</span> Organizar
+            </button>
+            <button class="glass-btn btn-right-action btn-green" onclick="handleGlobalAction(5)">
+                <span class="icon">★</span> Especial
+            </button>
+        </div>
     </div>
+
+    <button id="hide-btn" onclick="toggleVisibility()">Ocultar Tela</button>
 
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
         
-        // --- CONFIGURAÇÃO DE PASTAS ---
         const SOURCE_FOLDER_ID = '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd'; 
         const FOLDER_DESTINATIONS = {
-            1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH',
-            2: '1hQNmdtdyOcI4qjP6uIqv37Q4qY7JIFGX',
-            3: '1HwsVXHF9I6tA5RfzmDT7L9BBo84lTJTL',
-            4: '1NWh7zR7V5c0qSqb2XyYUS_SJ2F8ojY6R',
-            5: '1Auv1qacvBwtQBIZSNJvkblm5XogsSxo_'
+            1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH', // Excluir
+            3: '1HwsVXHF9I6tA5RfzmDT7L9BBo84lTJTL', // Organizar
+            5: '1Auv1qacvBwtQBIZSNJvkblm5XogsSxo_'  // Especial
         };
 
         let tokenClient;
@@ -219,7 +275,8 @@
         
         const processedIds = new Set(); 
         let actionHistory = []; 
-        let totalPhotosInFolder = 0; // Variável global do contador
+        let totalPhotosInFolder = 0; 
+        let isScreenHidden = false;
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -240,17 +297,24 @@
             tokenClient.callback = async (resp) => {
                 document.getElementById('auth_button').style.display = 'none';
                 document.getElementById('tinder-container').style.display = 'block';
-                document.getElementById('bottom-bar').style.display = 'flex'; 
-                document.getElementById('top-counter').style.display = 'block'; // Mostra o contador
+                document.getElementById('controls-wrapper').style.display = 'flex'; 
+                document.getElementById('top-counter').style.display = 'block'; 
+                document.getElementById('hide-btn').style.display = 'block'; 
                 
-                // Dispara a contagem e o carregamento das fotos simultaneamente
                 fetchTotalCount();
                 await listPhotos();
             };
             tokenClient.requestAccessToken({prompt: 'consent'}); 
         }
 
-        // --- NOVA FUNÇÃO: Conta o total de arquivos em background ---
+        // --- SISTEMA DE VISIBILIDADE (OCULTAR TELA) ---
+        function toggleVisibility() {
+            const container = document.getElementById('tinder-container');
+            isScreenHidden = !isScreenHidden;
+            container.style.opacity = isScreenHidden ? '0.1' : '1';
+        }
+
+        // --- CONTAGEM E BUSCA ---
         async function fetchTotalCount() {
             let count = 0;
             let pageToken = null;
@@ -261,28 +325,18 @@
             try {
                 do {
                     const response = await gapi.client.drive.files.list({
-                        q: query,
-                        pageSize: 1000, // Pega o máximo permitido para ser rápido
-                        fields: 'nextPageToken, files(id)', // Traz só o ID pra não pesar o navegador
-                        pageToken: pageToken
+                        q: query, pageSize: 1000, fields: 'nextPageToken, files(id)', pageToken: pageToken
                     });
-                    if (response.result.files) {
-                        count += response.result.files.length;
-                    }
+                    if (response.result.files) count += response.result.files.length;
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
                 
                 totalPhotosInFolder = count;
                 updateCounterDisplay();
-            } catch (e) {
-                console.error("Erro ao contar fotos:", e);
-                countDisplay.innerText = "?";
-            }
+            } catch (e) { countDisplay.innerText = "?"; }
         }
 
-        function updateCounterDisplay() {
-            document.getElementById('photo-count').innerText = totalPhotosInFolder;
-        }
+        function updateCounterDisplay() { document.getElementById('photo-count').innerText = totalPhotosInFolder; }
 
         async function listPhotos() {
             if (isFetching) return;
@@ -296,19 +350,14 @@
                 'q': query
             };
 
-            if (nextPageToken) {
-                requestParams.pageToken = nextPageToken;
-            }
+            if (nextPageToken) requestParams.pageToken = nextPageToken;
             
             try {
                 const response = await gapi.client.drive.files.list(requestParams);
                 nextPageToken = response.result.nextPageToken || null;
                 addCardsToStack(response.result.files);
-            } catch (e) { 
-                console.error("Erro na busca:", e); 
-            } finally {
-                isFetching = false;
-            }
+            } catch (e) { console.error("Erro na busca:", e); } 
+            finally { isFetching = false; }
         }
 
         function addCardsToStack(files) {
@@ -316,14 +365,11 @@
             const endScreen = document.getElementById('end-screen');
 
             if (!files || files.length === 0) { 
-                if (document.querySelectorAll('.card').length === 0) {
-                    endScreen.style.display = 'flex';
-                }
+                if (document.querySelectorAll('.card').length === 0) endScreen.style.display = 'flex';
                 return; 
             }
 
             let addedCount = 0;
-
             files.forEach((file) => {
                 if (processedIds.has(file.id)) return;
                 processedIds.add(file.id);
@@ -335,26 +381,21 @@
             });
 
             if (addedCount === 0 && document.querySelectorAll('.card').length === 0) {
-                if (nextPageToken) {
-                    listPhotos();
-                } else {
-                    endScreen.style.display = 'flex';
-                }
+                if (nextPageToken) listPhotos();
+                else endScreen.style.display = 'flex';
             }
         }
 
+        // --- ESTRUTURA E SWIPE DO CARD ---
         function createCardElement(fileId, imgUrl) {
             const card = document.createElement('div');
             card.className = 'card';
+            card.dataset.fileId = fileId; // Identificador embutido no HTML
             card.innerHTML = `
-                <div class="status-label like">TOP</div>
-                <div class="status-label nope">LIXO</div>
+                <div class="status-label nope">EXCLUIR</div>
+                <div class="status-label org">ORGANIZAR</div>
+                <div class="status-label like">ESPECIAL</div>
                 <img src="${imgUrl}">
-                <div class="star-footer" onpointerdown="event.stopPropagation()">
-                    ${[1,2,3,4,5].map(num => `
-                        <button class="star-btn" onclick="rateAndMove('${fileId}', ${num}, this)">★</button>
-                    `).join('')}
-                </div>
             `;
             setupSwipe(card, fileId);
             return card;
@@ -362,35 +403,59 @@
 
         function setupSwipe(el, fileId) {
             const hammer = new Hammer(el);
+            hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL }); // Ativa o arrastar livre
+
             const likeLabel = el.querySelector('.like');
             const nopeLabel = el.querySelector('.nope');
+            const orgLabel = el.querySelector('.org');
 
             hammer.on('pan', (e) => {
                 el.style.transition = 'none';
-                el.style.transform = `translateX(${e.deltaX}px) rotate(${e.deltaX / 25}deg)`;
-                if (e.deltaX > 50) likeLabel.style.opacity = e.deltaX / 200;
-                else if (e.deltaX < -50) nopeLabel.style.opacity = Math.abs(e.deltaX) / 200;
+                el.style.transform = `translate(${e.deltaX}px, ${e.deltaY}px) rotate(${e.deltaX / 25}deg)`;
+                
+                // Opacidade condicional das tags
+                if (e.deltaX > 80) { likeLabel.style.opacity = e.deltaX / 200; nopeLabel.style.opacity = 0; orgLabel.style.opacity = 0; }
+                else if (e.deltaX < -80) { nopeLabel.style.opacity = Math.abs(e.deltaX) / 200; likeLabel.style.opacity = 0; orgLabel.style.opacity = 0; }
+                else if (e.deltaY < -80) { orgLabel.style.opacity = Math.abs(e.deltaY) / 200; likeLabel.style.opacity = 0; nopeLabel.style.opacity = 0; }
             });
 
             hammer.on('panend', (e) => {
                 el.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-                if (e.deltaX > 150) animateOut(el, fileId, 5, 1000);
-                else if (e.deltaX < -150) animateOut(el, fileId, 1, -1000);
+                // Thresholds multi-direcionais
+                if (e.deltaX > 150) animateOut(el, fileId, 5, 1000, 200); // Verde (Especial)
+                else if (e.deltaX < -150) animateOut(el, fileId, 1, -1000, 200); // Vermelho (Excluir)
+                else if (e.deltaY < -150) animateOut(el, fileId, 3, 0, -1000); // Azul (Organizar)
                 else {
                     el.style.transform = '';
-                    likeLabel.style.opacity = 0; nopeLabel.style.opacity = 0;
+                    likeLabel.style.opacity = 0; nopeLabel.style.opacity = 0; orgLabel.style.opacity = 0;
                 }
             });
         }
 
-        async function rateAndMove(fileId, rating, btn) {
-            const card = btn.closest('.card');
-            const stars = card.querySelectorAll('.star-btn');
-            stars.forEach((s, idx) => s.classList.toggle('active', idx < rating));
-            animateOut(card, fileId, rating, 0, 800);
+        // --- AÇÃO PELOS BOTÕES GLOBAIS ---
+        function getTopCard() {
+            const cards = Array.from(document.querySelectorAll('.card'));
+            if(cards.length === 0) return null;
+            cards.sort((a, b) => parseInt(b.style.zIndex) - parseInt(a.style.zIndex));
+            return cards[0];
         }
 
-        async function animateOut(el, fileId, rating, x, y = 0) {
+        function handleGlobalAction(rating) {
+            const topCard = getTopCard();
+            if (!topCard) return;
+            const fileId = topCard.dataset.fileId;
+            
+            // Define a direção da animação baseada no botão pressionado
+            let x = 0, y = 0;
+            if (rating === 1) { x = -1000; y = 200; } // Esquerda (Excluir)
+            else if (rating === 5) { x = 1000; y = 200; } // Direita (Especial)
+            else if (rating === 3) { x = 0; y = -1000; } // Cima (Organizar)
+            
+            animateOut(topCard, fileId, rating, x, y);
+        }
+
+        // --- COMUNICAÇÃO DRIVE ---
+        async function animateOut(el, fileId, rating, x, y) {
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
             const imgUrl = el.querySelector('img').src;
@@ -398,19 +463,14 @@
             try {
                 const newParent = FOLDER_DESTINATIONS[rating];
                 await gapi.client.drive.files.update({
-                    fileId: fileId,
-                    addParents: newParent,
-                    removeParents: SOURCE_FOLDER_ID
+                    fileId: fileId, addParents: newParent, removeParents: SOURCE_FOLDER_ID
                 });
                 
                 actionHistory.push({ fileId: fileId, destination: newParent, imgUrl: imgUrl });
                 updateUndoButtonState();
                 
-                // Diminui o contador e atualiza a tela
                 if (totalPhotosInFolder > 0) totalPhotosInFolder--;
                 updateCounterDisplay();
-
-                console.log(`Sucesso: Arquivo movido para pasta ${rating}`);
             } catch (e) { 
                 console.error("Erro ao mover:", e); 
                 alert("ERRO AO MOVER PARA O DRIVE! O arquivo continua na origem.");
@@ -419,7 +479,7 @@
             setTimeout(() => {
                 el.remove();
                 checkAndFetchMore();
-            }, 400);
+            }, 300);
         }
 
         async function undoLastAction() {
@@ -430,18 +490,11 @@
 
             try {
                 await gapi.client.drive.files.update({
-                    fileId: lastAction.fileId,
-                    addParents: SOURCE_FOLDER_ID,
-                    removeParents: lastAction.destination
+                    fileId: lastAction.fileId, addParents: SOURCE_FOLDER_ID, removeParents: lastAction.destination
                 });
-                
-                // Aumenta o contador e atualiza a tela ao desfazer
                 totalPhotosInFolder++;
                 updateCounterDisplay();
-
-                console.log(`Desfeito: Arquivo retornou à origem.`);
             } catch (e) {
-                console.error("Erro ao desfazer ação no Drive:", e);
                 alert("Não foi possível devolver o arquivo à origem no Drive.");
                 return; 
             }
@@ -453,40 +506,31 @@
             const card = createCardElement(lastAction.fileId, lastAction.imgUrl);
             
             card.style.zIndex = undoZIndex++; 
-            card.style.transform = 'scale(0.8)';
+            card.style.transform = 'translateY(-100px) scale(0.9)'; // Cai de cima
             card.style.opacity = '0';
             container.appendChild(card);
 
             requestAnimationFrame(() => {
-                card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-                card.style.transform = 'scale(1)';
+                card.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease';
+                card.style.transform = 'translateY(0) scale(1)';
                 card.style.opacity = '1';
             });
         }
 
         function updateUndoButtonState() {
             const undoBtn = document.getElementById('undo_button');
-            if (actionHistory.length > 0) {
-                undoBtn.style.display = 'inline-block';
-            } else {
-                undoBtn.style.display = 'none';
-            }
+            undoBtn.style.visibility = (actionHistory.length > 0) ? 'visible' : 'hidden';
         }
 
         function checkAndFetchMore() {
             const remainingCards = document.querySelectorAll('.card').length;
-            
-            if (remainingCards <= 50 && nextPageToken) {
-                listPhotos();
-            } else if (remainingCards === 0 && !nextPageToken) {
-                document.getElementById('end-screen').style.display = 'flex';
-            }
+            if (remainingCards <= 50 && nextPageToken) listPhotos();
+            else if (remainingCards === 0 && !nextPageToken) document.getElementById('end-screen').style.display = 'flex';
         }
 
         function reloadFolder() {
             const container = document.getElementById('tinder-container');
-            const cards = container.querySelectorAll('.card');
-            cards.forEach(c => c.remove());
+            container.querySelectorAll('.card').forEach(c => c.remove());
             
             nextPageToken = null; 
             processedIds.clear();
@@ -494,8 +538,6 @@
             updateUndoButtonState();
             
             document.getElementById('end-screen').style.display = 'none'; 
-            
-            // Recalcula o contador do zero
             fetchTotalCount();
             listPhotos(); 
         }
