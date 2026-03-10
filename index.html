@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
-    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async F95vwadfsdfsadfdsfdefer></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     
     <style>
         /* Layout Full Black & Centered */
@@ -63,7 +63,7 @@
             aspect-ratio: 1 / 1; 
             display: none;
             transition: opacity 0.3s ease; 
-            transform: translateY(-10vh); /* ADICIONE ESTA LINHA */
+            transform: translateY(-10vh);
         }
 
         .card { 
@@ -99,14 +99,14 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 15px; /* Separa a área de ação da faixa de ocultar tela */
+            gap: 15px; 
             z-index: 999999;
-            pointer-events: none; /* Permite cliques na tela vazia */
+            pointer-events: none; 
         }
 
         /* Linha superior (Botões Principais) */
         #controls-wrapper {
-            display: none; /* Aparece com as fotos */
+            display: none; 
             justify-content: space-between;
             align-items: flex-end;
             padding: 0 10px;
@@ -145,7 +145,7 @@
             align-items: center;
             justify-content: center;
             text-transform: uppercase;
-            touch-action: manipulation; /* Otimiza o toque no mobile, sem delay */
+            touch-action: manipulation; 
         }
 
         .glass-btn:active {
@@ -161,6 +161,25 @@
             font-size: 0.8rem;
             letter-spacing: 0.5px;
         }
+
+        /* NOVO BOTÃO: Preto com borda prata 3D */
+        .btn-empty-trash {
+            background: linear-gradient(145deg, #2a2a2a, #000000);
+            border: 2px solid #a8a8a8;
+            border-top: 2px solid #e0e0e0;
+            border-left: 2px solid #e0e0e0;
+            border-bottom: 2px solid #555555;
+            border-right: 2px solid #555555;
+            color: #ffffff;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.8), inset 2px 2px 5px rgba(255,255,255,0.2), inset -2px -2px 5px rgba(0,0,0,0.5);
+            text-shadow: 0 1px 3px #000;
+            transition: all 0.1s ease;
+        }
+        .btn-empty-trash:active {
+            transform: scale(0.92) translateY(2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.8), inset 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
         .btn-undo { background: rgba(255, 193, 7, 0.15); border-color: rgba(255, 193, 7, 0.3); visibility: hidden; }
         .btn-sync { background: rgba(232, 62, 140, 0.15); border-color: rgba(232, 62, 140, 0.3); }
 
@@ -181,14 +200,14 @@
 
         /* Linha inferior (Botão Ocultar Tela) */
         #hide-strip {
-            display: none; /* Aparece após login */
+            display: none; 
             justify-content: center;
             width: 100%;
             pointer-events: none;
         }
 
         #hide-btn {
-            background: rgba(128, 128, 128, 0.5); /* Cinza 50% */
+            background: rgba(128, 128, 128, 0.5); 
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -199,7 +218,7 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            pointer-events: auto; /* Reativa o clique só no botão */
+            pointer-events: auto; 
             touch-action: manipulation;
         }
 
@@ -221,7 +240,7 @@
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
+    <button id="auth_button" onclick="handleAuthClick()">COMEÇAR CURADORIA</button>
     
     <div id="top-counter">RESTANTES: <span id="photo-count">...</span></div>
 
@@ -235,6 +254,7 @@
         
         <div id="controls-wrapper">
             <div class="left-panel">
+                <button id="empty_trash_btn" class="glass-btn btn-left-stack btn-empty-trash" onclick="emptyTrashFolder()">🗑 Limpar Lixeira</button>
                 <button id="undo_button" class="glass-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ Desfazer</button>
                 <button class="glass-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 Sincronizar</button>
             </div>
@@ -310,18 +330,15 @@
                 await listPhotos();
             };
             
-            // Removido o {prompt: 'consent'} para usar a sessão atual se já existir
             tokenClient.requestAccessToken(); 
         }
 
-        // --- SISTEMA DE VISIBILIDADE (OCULTAR TELA) ---
         function toggleVisibility() {
             const container = document.getElementById('catalog-container');
             isScreenHidden = !isScreenHidden;
             container.style.opacity = isScreenHidden ? '0.01' : '1';
         }
 
-        // --- CONTAGEM E BUSCA ---
         async function fetchTotalCount() {
             let count = 0;
             let pageToken = null;
@@ -393,7 +410,6 @@
             }
         }
 
-        // --- ESTRUTURA SEM SWIPE ---
         function createCardElement(fileId, imgUrl) {
             const card = document.createElement('div');
             card.className = 'card';
@@ -402,7 +418,6 @@
             return card;
         }
 
-        // --- AÇÃO PELOS BOTÕES GLOBAIS (AGORA INSTANTÂNEA) ---
         function getTopCard() {
             const cards = Array.from(document.querySelectorAll('.card'));
             if(cards.length === 0) return null;
@@ -416,32 +431,27 @@
             const fileId = topCard.dataset.fileId;
             
             let x = 0, y = 0;
-            if (rating === 1) { x = -500; y = 100; } // Esquerda (Excluir)
-            else if (rating === 5) { x = 500; y = 100; } // Direita (Especial)
-            else if (rating === 3) { x = 0; y = -500; } // Cima (Organizar)
+            if (rating === 1) { x = -500; y = 100; } 
+            else if (rating === 5) { x = 500; y = 100; } 
+            else if (rating === 3) { x = 0; y = -500; } 
             
             animateOut(topCard, fileId, rating, x, y);
         }
 
-        // --- COMUNICAÇÃO DRIVE EM SEGUNDO PLANO ---
         function animateOut(el, fileId, rating, x, y) {
-            // 1. ANIMAÇÃO IMEDIATA (Sem travar o usuário)
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
             const imgUrl = el.querySelector('img').src;
             
-            // 2. Tira a foto do caminho rapidamente para o próximo clique
             setTimeout(() => {
                 el.remove();
                 checkAndFetchMore();
             }, 200);
 
-            // 3. FAZ O TRABALHO PESADO NO DRIVE SEM AVISAR A TELA (Fire and forget)
             const newParent = FOLDER_DESTINATIONS[rating];
             gapi.client.drive.files.update({
                 fileId: fileId, addParents: newParent, removeParents: SOURCE_FOLDER_ID
             }).then(() => {
-                // Ao dar certo no Google, salva o histórico para o "Desfazer"
                 actionHistory.push({ fileId: fileId, destination: newParent, imgUrl: imgUrl });
                 updateUndoButtonState();
                 
@@ -449,7 +459,6 @@
                 updateCounterDisplay();
             }).catch(e => {
                 console.error("Erro ao mover imagem na API:", e);
-                // Como não estamos parando a interface, só avisa no console ou alerta rápido
             });
         }
 
@@ -459,7 +468,6 @@
             const lastAction = actionHistory.pop();
             updateUndoButtonState();
 
-            // Desfazer é uma ação crítica, então aguardamos a confirmação antes de reexibir
             try {
                 await gapi.client.drive.files.update({
                     fileId: lastAction.fileId, addParents: SOURCE_FOLDER_ID, removeParents: lastAction.destination
@@ -512,6 +520,65 @@
             document.getElementById('end-screen').style.display = 'none'; 
             fetchTotalCount();
             listPhotos(); 
+        }
+
+        // --- NOVA FUNÇÃO: Esvaziar a Pasta "Excluir" (Pasta 1) ---
+        async function emptyTrashFolder() {
+            const trashFolderId = FOLDER_DESTINATIONS[1];
+            
+            // Pede confirmação antes de excluir as fotos
+            if (!confirm("Tem certeza que deseja EXCLUIR DEFINITIVAMENTE todos os arquivos da pasta 'Excluir'? Essa ação não pode ser desfeita.")) {
+                return;
+            }
+
+            const btn = document.getElementById('empty_trash_btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ APAGANDO...";
+            btn.style.pointerEvents = "none"; // Desativa o botão temporariamente
+
+            try {
+                let hasMore = true;
+                let pageToken = null;
+                let deletedCount = 0;
+
+                // Loop para buscar os arquivos na pasta 1 e apagar todos eles
+                while (hasMore) {
+                    const response = await gapi.client.drive.files.list({
+                        q: `'${trashFolderId}' in parents and trashed = false`,
+                        fields: 'nextPageToken, files(id)',
+                        pageSize: 100, // Processa em lotes
+                        pageToken: pageToken
+                    });
+
+                    const files = response.result.files;
+                    if (files && files.length > 0) {
+                        // Deleta arquivo por arquivo do lote atual
+                        for (const file of files) {
+                            await gapi.client.drive.files.delete({ fileId: file.id });
+                            deletedCount++;
+                        }
+                    }
+
+                    pageToken = response.result.nextPageToken;
+                    if (!pageToken) {
+                        hasMore = false; // Se não tem próxima página, termina o loop
+                    }
+                }
+                
+                // Limpa o histórico de "desfazer" local que aponta para arquivos da pasta 1 (já que não existem mais lá)
+                actionHistory = actionHistory.filter(acao => acao.destination !== trashFolderId);
+                updateUndoButtonState();
+
+                alert(`Sucesso! ${deletedCount} arquivos foram excluídos permanentemente.`);
+                
+            } catch (e) {
+                console.error("Erro ao limpar lixeira:", e);
+                alert("Ocorreu um erro ao excluir os arquivos. Verifique se as permissões estão corretas.");
+            } finally {
+                // Restaura o visual do botão
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = "auto";
+            }
         }
     </script>
 </body>
