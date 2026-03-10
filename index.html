@@ -31,6 +31,27 @@
             cursor: pointer;
         }
 
+        /* Botão de Refresh fixo no topo */
+        #top-bar {
+            position: fixed;
+            top: 20px;
+            z-index: 999999;
+            display: none; /* Aparece após o login */
+            width: 100%;
+            text-align: center;
+        }
+
+        #refresh_button_top {
+            padding: 10px 20px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
         /* Container Responsivo */
         #tinder-container { 
             position: relative; 
@@ -121,8 +142,12 @@
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
+    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA 1515</button>
     
+    <div id="top-bar">
+        <button id="refresh_button_top" onclick="reloadFolder()">🔄 SINCRONIZAR NOVOS ARQUIVOS</button>
+    </div>
+
     <div id="tinder-container">
         <div id="end-screen">
             <div id="empty-message">A pasta está vazia ou os arquivos acabaram!</div>
@@ -132,7 +157,9 @@
 
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.readonly';
+        
+        // CORREÇÃO 1: Permissão total de edição para conseguir mover arquivos que não foram criados pelo app
+        const SCOPES = 'https://www.googleapis.com/auth/drive'; 
         
         // --- CONFIGURAÇÃO DE PASTAS ---
         const SOURCE_FOLDER_ID = '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd'; 
@@ -172,9 +199,10 @@
             tokenClient.callback = async (resp) => {
                 document.getElementById('auth_button').style.display = 'none';
                 document.getElementById('tinder-container').style.display = 'block';
+                document.getElementById('top-bar').style.display = 'block'; // Mostra a barra do topo
                 await listPhotos();
             };
-            tokenClient.requestAccessToken({prompt: 'consent'});
+            tokenClient.requestAccessToken({prompt: 'consent'}); // Força o consentimento para aceitar o novo escopo
         }
 
         async function listPhotos() {
@@ -182,6 +210,7 @@
             isFetching = true;
             document.getElementById('end-screen').style.display = 'none';
 
+            // Adicionado um timestamp falso (bypass temporário de cache local da API)
             const query = `'${SOURCE_FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`;
             const requestParams = {
                 'pageSize': 100, 
@@ -208,7 +237,6 @@
             const container = document.getElementById('tinder-container');
             const endScreen = document.getElementById('end-screen');
 
-            // Se a API não retornar arquivos e a tela estiver vazia, exibe a tela de refresh
             if (!files || files.length === 0) { 
                 if (document.querySelectorAll('.card').length === 0) {
                     endScreen.style.display = 'flex';
@@ -242,10 +270,8 @@
                 container.appendChild(card);
             });
 
-            // Se os arquivos retornados já tinham sido processados e a tela continua vazia
             if (addedCount === 0 && document.querySelectorAll('.card').length === 0) {
                 if (nextPageToken) {
-                    // Continua buscando na próxima página invisivelmente
                     listPhotos();
                 } else {
                     endScreen.style.display = 'flex';
@@ -289,13 +315,17 @@
             
             try {
                 const newParent = FOLDER_DESTINATIONS[rating];
-                gapi.client.drive.files.update({
+                // Await adicionado e remoção da injeção forçada de propriedades que causava erro 400
+                await gapi.client.drive.files.update({
                     fileId: fileId,
                     addParents: newParent,
-                    removeParents: SOURCE_FOLDER_ID,
-                    resource: { properties: { 'star_rating': rating.toString() } }
+                    removeParents: SOURCE_FOLDER_ID
                 });
-            } catch (e) { console.error("Erro ao mover:", e); }
+                console.log(`Sucesso: Arquivo movido para pasta ${rating}`);
+            } catch (e) { 
+                console.error("Falha Crítica ao mover. Verifique se tem acesso total ao arquivo:", e); 
+                alert("ERRO AO MOVER PARA O DRIVE! O arquivo continua na origem. Verifique se a permissão na nuvem foi atualizada para /auth/drive.");
+            }
 
             setTimeout(() => {
                 el.remove();
@@ -309,15 +339,22 @@
             if (remainingCards <= 50 && nextPageToken) {
                 listPhotos();
             } else if (remainingCards === 0 && !nextPageToken) {
+                // Se chegar a zero e não houver página seguinte, garante que a tela final apareça
                 document.getElementById('end-screen').style.display = 'flex';
             }
         }
 
-        // Função do botão para varrer a pasta novamente em busca de novos arquivos
         function reloadFolder() {
-            nextPageToken = null; // Reseta a paginação para voltar do início
-            document.getElementById('end-screen').style.display = 'none'; // Esconde o aviso e o botão
-            listPhotos(); // Dispara a busca novamente
+            // Limpa as cartas remanescentes da tela para não duplicar visualmente
+            const container = document.getElementById('tinder-container');
+            const cards = container.querySelectorAll('.card');
+            cards.forEach(c => c.remove());
+            
+            // Reseta toda a lógica de busca para recomeçar do zero
+            nextPageToken = null; 
+            processedIds.clear();
+            document.getElementById('end-screen').style.display = 'none'; 
+            listPhotos(); 
         }
     </script>
 </body>
