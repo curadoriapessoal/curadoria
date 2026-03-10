@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <title>Curadoria 800x800</title>
+    <title>Curadoria Pro 800x800</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
@@ -9,37 +9,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     
     <style>
-        /* Layout 100% Preto */
+        /* Layout Full Black & Centered */
         body { 
             background-color: #000; 
             color: #fff; 
-            font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
             overflow: hidden; 
             display: flex; 
-            flex-direction: column; 
             align-items: center; 
             justify-content: center;
             height: 100vh;
+            width: 100vw;
         }
 
         #auth_button { 
             padding: 20px 40px; 
-            font-size: 1.2rem; 
             background: #fff; 
-            color: #000; 
-            border: none; 
             border-radius: 50px; 
-            cursor: pointer; 
             font-weight: bold;
+            cursor: pointer;
         }
 
-        /* Container ajustado para a proporção 800x800 + footer */
+        /* Container Responsivo */
         #catalog-container { 
             position: relative; 
-            width: 800px; 
-            height: 920px; /* 800 da foto + espaço das estrelas */
-            perspective: 1000px; 
+            width: 90vw; /* 90% da largura da tela */
+            max-width: 800px; 
+            aspect-ratio: 1 / 1.2; /* Espaço para foto quadrada + estrelas */
             display: none;
         }
 
@@ -51,55 +47,51 @@
             display: flex; 
             flex-direction: column; 
             align-items: center;
+            justify-content: flex-start;
             transition: transform 0.3s ease, opacity 0.3s ease; 
             touch-action: none;
         }
 
         .card img { 
-            width: 800px; 
-            height: 800px; 
-            object-fit: contain;
+            width: 100%; 
+            aspect-ratio: 1 / 1; /* Garante o quadrado 800x800 proporcional */
+            object-fit: cover;
             pointer-events: none;
-            user-select: none;
         }
 
-        /* Footer das Estrelas - 95% da largura */
+        /* Footer das Estrelas ocupando 95% da largura da foto */
         .star-footer {
             width: 95%; 
-            height: 100px;
             display: flex; 
             justify-content: space-between; 
-            align-items: center;
-            margin-top: 10px;
+            margin-top: 20px;
         }
 
         .star-btn {
             background: none; 
             border: none; 
-            font-size: 80px; /* Estrelas gigantes */
-            color: #333; /* Estrela vazia (cinza escuro) */
+            font-size: 12vw; /* Escala com a tela do celular */
+            max-size: 80px;
+            color: #222; 
             cursor: pointer;
             padding: 0;
-            line-height: 1;
-            transition: color 0.1s, transform 0.1s;
         }
 
-        .star-btn:active { transform: scale(1.2); }
-        .star-btn.active { color: #fff; } /* Estrela preenchida (branco) */
+        .star-btn.active { color: #fff; }
 
-        /* Feedback visual no swipe */
+        /* Labels de Feedback */
         .status-label {
-            position: absolute; top: 350px; padding: 20px; border: 5px solid;
-            border-radius: 10px; font-size: 4rem; font-weight: bold;
-            opacity: 0; pointer-events: none; z-index: 10; text-transform: uppercase;
+            position: absolute; top: 40%; padding: 10px; border: 4px solid;
+            border-radius: 10px; font-size: 2rem; font-weight: bold;
+            opacity: 0; z-index: 10; pointer-events: none;
         }
-        .like { color: #fff; border-color: #fff; left: 100px; }
-        .nope { color: #444; border-color: #444; right: 100px; }
+        .like { color: #fff; border-color: #fff; left: 10px; }
+        .nope { color: #444; border-color: #444; right: 10px; }
     </style>
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">ENTRAR NO CATÁLOGO</button>
+    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
     
     <div id="catalog-container"></div>
 
@@ -107,6 +99,8 @@
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata https://www.googleapis.com/auth/drive.readonly';
         
+        // --- CONFIGURAÇÃO DE PASTAS ---
+        const SOURCE_FOLDER_ID = '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd'; 
         const FOLDER_DESTINATIONS = {
             1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH',
             2: '1hQNmdtdyOcI4qjP6uIqv37Q4qY7JIFGX',
@@ -144,29 +138,33 @@
         }
 
         async function listPhotos() {
-            const response = await gapi.client.drive.files.list({
-                'pageSize': 30,
-                'fields': 'files(id, name, thumbnailLink, parents)',
-                'q': "mimeType contains 'image/' and trashed = false"
-            });
-            renderStack(response.result.files);
+            // A mágica está aqui: filtrando por 'parents'
+            const query = `'${SOURCE_FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`;
+            
+            try {
+                const response = await gapi.client.drive.files.list({
+                    'pageSize': 20,
+                    'fields': 'files(id, name, thumbnailLink, parents)',
+                    'q': query
+                });
+                renderStack(response.result.files);
+            } catch (e) { console.error("Erro na busca:", e); }
         }
 
         function renderStack(files) {
             const container = document.getElementById('catalog-container');
             container.innerHTML = '';
-            
+            if (!files || files.length === 0) { container.innerHTML = "Pasta Vazia!"; return; }
+
             files.forEach((file, index) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.style.zIndex = files.length - index;
-                
-                // Força miniatura de alta qualidade
                 const imgUrl = file.thumbnailLink.replace('=s220', '=s800');
 
                 card.innerHTML = `
-                    <div class="status-label like">5 ★</div>
-                    <div class="status-label nope">1 ★</div>
+                    <div class="status-label like">TOP</div>
+                    <div class="status-label nope">LIXO</div>
                     <img src="${imgUrl}">
                     <div class="star-footer" onpointerdown="event.stopPropagation()">
                         ${[1,2,3,4,5].map(num => `
@@ -174,7 +172,6 @@
                         `).join('')}
                     </div>
                 `;
-                
                 setupSwipe(card, file.id);
                 container.appendChild(card);
             });
@@ -187,15 +184,15 @@
 
             hammer.on('pan', (e) => {
                 el.style.transition = 'none';
-                el.style.transform = `translateX(${e.deltaX}px) rotate(${e.deltaX / 20}deg)`;
-                if (e.deltaX > 50) { likeLabel.style.opacity = e.deltaX / 200; }
-                else if (e.deltaX < -50) { nopeLabel.style.opacity = Math.abs(e.deltaX) / 200; }
+                el.style.transform = `translateX(${e.deltaX}px) rotate(${e.deltaX / 25}deg)`;
+                if (e.deltaX > 50) likeLabel.style.opacity = e.deltaX / 200;
+                else if (e.deltaX < -50) nopeLabel.style.opacity = Math.abs(e.deltaX) / 200;
             });
 
             hammer.on('panend', (e) => {
                 el.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-                if (e.deltaX > 200) { animateOut(el, fileId, 5, 1000); }
-                else if (e.deltaX < -200) { animateOut(el, fileId, 1, -1000); }
+                if (e.deltaX > 150) animateOut(el, fileId, 5, 1000);
+                else if (e.deltaX < -150) animateOut(el, fileId, 1, -1000);
                 else {
                     el.style.transform = '';
                     likeLabel.style.opacity = 0; nopeLabel.style.opacity = 0;
@@ -205,34 +202,24 @@
 
         async function rateAndMove(fileId, rating, btn) {
             const card = btn.closest('.card');
-            // Feedback visual imediato nas estrelas
             const stars = card.querySelectorAll('.star-btn');
             stars.forEach((s, idx) => s.classList.toggle('active', idx < rating));
-            
-            // Animação de saída (para baixo)
             animateOut(card, fileId, rating, 0, 800);
         }
 
         async function animateOut(el, fileId, rating, x, y = 0) {
-            el.style.transform = `translate(${x}px, ${y}px) rotate(${x/10}deg)`;
+            el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
             
-            // Lógica de Movimentação no Drive
             try {
-                // 1. Pega a pasta atual para remover
-                const fileData = await gapi.client.drive.files.get({ fileId: fileId, fields: 'parents' });
-                const oldParents = fileData.result.parents ? fileData.result.parents.join(',') : '';
                 const newParent = FOLDER_DESTINATIONS[rating];
-
-                // 2. Move e Atualiza Metadado
                 await gapi.client.drive.files.update({
                     fileId: fileId,
                     addParents: newParent,
-                    removeParents: oldParents,
+                    removeParents: SOURCE_FOLDER_ID, // Remove especificamente da origem
                     resource: { properties: { 'star_rating': rating.toString() } }
                 });
-                console.log(`Sucesso: ${fileId} -> Folder ${rating}`);
-            } catch (e) { console.error("Erro na API:", e); }
+            } catch (e) { console.error("Erro ao mover:", e); }
 
             setTimeout(() => {
                 el.remove();
