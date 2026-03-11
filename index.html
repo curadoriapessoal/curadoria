@@ -89,7 +89,7 @@
         }
 
         /* ---------------------------------------------------
-           NOVO LAYOUT INFERIOR (CONTROLES + OCULTAR TELA)
+           LAYOUT INFERIOR (CONTROLES + OCULTAR TELA)
            --------------------------------------------------- */
         
         #bottom-area {
@@ -162,7 +162,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* NOVO BOTÃO: Preto com borda prata 3D */
+        /* Botão Preto com borda prata 3D */
         .btn-empty-trash {
             background: linear-gradient(145deg, #2a2a2a, #000000);
             border: 2px solid #a8a8a8;
@@ -235,18 +235,31 @@
             gap: 20px;
             z-index: 0;
         }
-        #empty-message { font-size: 1.2rem; color: #888; text-align: center; }
+        #empty-message { font-size: 1.2rem; color: #888; text-align: center; margin-bottom: 10px;}
+        
+        /* Botão largo na tela final para o 2º Filtro */
+        .btn-second-filter {
+            width: auto;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            pointer-events: auto;
+        }
+
     </style>
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">COMEÇAR CURADORIA</button>
+    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA DE ENTRADA</button>
     
     <div id="top-counter">RESTANTES: <span id="photo-count">...</span></div>
 
     <div id="catalog-container">
         <div id="end-screen">
             <div id="empty-message">Tudo limpo por aqui!</div>
+            <button id="second_filter_btn" class="glass-btn btn-blue btn-second-filter" onclick="startSecondFilter()">
+                🔄 Puxar Pasta Organizar (2º Filtro)
+            </button>
         </div>
     </div>
 
@@ -389,7 +402,11 @@
             const endScreen = document.getElementById('end-screen');
 
             if (!files || files.length === 0) { 
-                if (document.querySelectorAll('.card').length === 0) endScreen.style.display = 'flex';
+                if (document.querySelectorAll('.card').length === 0) {
+                    endScreen.style.display = 'flex';
+                    // Traz o botão de volta ao texto original se for um reload pós 2º filtro vazio
+                    document.getElementById('second_filter_btn').innerHTML = "🔄 Puxar Pasta Organizar (2º Filtro)";
+                }
                 return; 
             }
 
@@ -522,11 +539,9 @@
             listPhotos(); 
         }
 
-        // --- NOVA FUNÇÃO: Esvaziar a Pasta "Excluir" (Pasta 1) ---
         async function emptyTrashFolder() {
             const trashFolderId = FOLDER_DESTINATIONS[1];
             
-            // Pede confirmação antes de excluir as fotos
             if (!confirm("Tem certeza que deseja EXCLUIR DEFINITIVAMENTE todos os arquivos da pasta 'Excluir'? Essa ação não pode ser desfeita.")) {
                 return;
             }
@@ -534,25 +549,23 @@
             const btn = document.getElementById('empty_trash_btn');
             const originalText = btn.innerHTML;
             btn.innerHTML = "⏳ APAGANDO...";
-            btn.style.pointerEvents = "none"; // Desativa o botão temporariamente
+            btn.style.pointerEvents = "none"; 
 
             try {
                 let hasMore = true;
                 let pageToken = null;
                 let deletedCount = 0;
 
-                // Loop para buscar os arquivos na pasta 1 e apagar todos eles
                 while (hasMore) {
                     const response = await gapi.client.drive.files.list({
                         q: `'${trashFolderId}' in parents and trashed = false`,
                         fields: 'nextPageToken, files(id)',
-                        pageSize: 100, // Processa em lotes
+                        pageSize: 100, 
                         pageToken: pageToken
                     });
 
                     const files = response.result.files;
                     if (files && files.length > 0) {
-                        // Deleta arquivo por arquivo do lote atual
                         for (const file of files) {
                             await gapi.client.drive.files.delete({ fileId: file.id });
                             deletedCount++;
@@ -560,12 +573,9 @@
                     }
 
                     pageToken = response.result.nextPageToken;
-                    if (!pageToken) {
-                        hasMore = false; // Se não tem próxima página, termina o loop
-                    }
+                    if (!pageToken) hasMore = false; 
                 }
                 
-                // Limpa o histórico de "desfazer" local que aponta para arquivos da pasta 1 (já que não existem mais lá)
                 actionHistory = actionHistory.filter(acao => acao.destination !== trashFolderId);
                 updateUndoButtonState();
 
@@ -575,7 +585,66 @@
                 console.error("Erro ao limpar lixeira:", e);
                 alert("Ocorreu um erro ao excluir os arquivos. Verifique se as permissões estão corretas.");
             } finally {
-                // Restaura o visual do botão
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = "auto";
+            }
+        }
+
+        // --- NOVA FUNÇÃO: Iniciar o Segundo Filtro ---
+        async function startSecondFilter() {
+            const folder3Id = FOLDER_DESTINATIONS[3];
+            const btn = document.getElementById('second_filter_btn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = "⏳ PUXANDO ARQUIVOS...";
+            btn.style.pointerEvents = "none";
+
+            try {
+                let hasMore = true;
+                let pageToken = null;
+                let movedCount = 0;
+
+                // Varre a pasta 3 inteira
+                while (hasMore) {
+                    const response = await gapi.client.drive.files.list({
+                        q: `'${folder3Id}' in parents and trashed = false`,
+                        fields: 'nextPageToken, files(id)',
+                        pageSize: 100,
+                        pageToken: pageToken
+                    });
+
+                    const files = response.result.files;
+                    if (files && files.length > 0) {
+                        // Devolve cada arquivo para a origem
+                        for (const file of files) {
+                            await gapi.client.drive.files.update({
+                                fileId: file.id,
+                                addParents: SOURCE_FOLDER_ID,
+                                removeParents: folder3Id
+                            });
+                            movedCount++;
+                        }
+                    }
+
+                    pageToken = response.result.nextPageToken;
+                    if (!pageToken) {
+                        hasMore = false;
+                    }
+                }
+
+                if (movedCount > 0) {
+                    alert(`Pronto! ${movedCount} arquivos da pasta Organizar voltaram para a origem. O 2º filtro vai começar.`);
+                    // Chama a função de reload já existente para recomeçar o processo de curadoria
+                    reloadFolder(); 
+                } else {
+                    alert("A pasta 'Organizar' (3) também está vazia. Não há o que filtrar.");
+                    btn.innerHTML = originalText;
+                    btn.style.pointerEvents = "auto";
+                }
+
+            } catch (e) {
+                console.error("Erro ao puxar arquivos para o 2º filtro:", e);
+                alert("Ocorreu um erro de comunicação com o Google Drive ao tentar mover os arquivos.");
                 btn.innerHTML = originalText;
                 btn.style.pointerEvents = "auto";
             }
