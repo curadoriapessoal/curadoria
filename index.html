@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Curator Pro</title>
+    <title>Editing Pro</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     
     <style>
-        /* Layout Full Black & Centered */
+        /* Layout Full Black & Shifted Up */
         body { 
             background-color: #000; 
             color: #fff; 
@@ -16,11 +16,12 @@
             overflow: hidden; 
             display: flex; 
             align-items: center; 
-            justify-content: center;
+            justify-content: flex-start; /* Mudado de center para flex-start (joga tudo pra cima) */
             height: 100vh;
             width: 100vw;
             flex-direction: column;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding-top: 5vh; /* Margem de respiro no topo da tela */
         }
 
         #auth_button { 
@@ -34,6 +35,7 @@
             box-shadow: 0 6px 0 #ccc, 0 10px 15px rgba(0,0,0,0.5);
             transition: all 0.1s ease;
             text-transform: uppercase;
+            margin-top: 30vh; /* Centraliza o botão de login temporariamente */
         }
         #auth_button:active {
             transform: translateY(6px);
@@ -48,20 +50,20 @@
             aspect-ratio: 1 / 1; 
             display: none;
             transition: opacity 0.3s ease; 
-            transform: translateY(-10vh);
+            margin-top: 5vh; /* Posicionamento fino após o shift-up do body */
         }
 
         /* Mostrador Minimalista Alinhado (Apenas Números) */
         #photo-count {
             position: absolute;
-            top: -10%; /* 10% acima da foto */
+            top: -20%; /* Subido para 20% acima da foto */
             right: 0;  /* Alinhado à direita */
             font-size: 1.5rem;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 2px 5px rgba(0,0,0,1);
             z-index: 1000;
-            display: none; /* Só exibe depois do login */
+            display: none; 
         }
 
         .card { 
@@ -87,12 +89,12 @@
         }
 
         /* ---------------------------------------------------
-           LAYOUT INFERIOR (CONTROLES SÓLIDOS 3D)
+           LAYOUT INFERIOR (GLASSMORPHISM 2.0 + NEON RIM)
            --------------------------------------------------- */
         
         #bottom-area {
             position: fixed;
-            bottom: env(safe-area-inset-bottom, 15px);
+            bottom: env(safe-area-inset-bottom, 25px); /* Subido um pouco na margem de base */
             left: 0;
             width: 100%;
             display: flex;
@@ -124,85 +126,95 @@
             pointer-events: auto;
         }
 
-        /* Estilo Base Sólido 3D */
-        .solid-btn {
-            border: none;
+        /* Estilo Base Glassmorphism 2.0 com Satin Texture */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05); /* Textura acetinada */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
             color: #fff;
             font-weight: 700;
             cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            transition: all 0.2s ease;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
             display: flex;
             align-items: center;
             justify-content: center;
             text-transform: uppercase;
-            touch-action: manipulation; 
-        }
-        
-        .solid-btn:active {
-            transform: translateY(6px);
+            touch-action: manipulation;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 100%);
         }
 
-        /* Botões Esquerda */
+        .glass-btn:active {
+            transform: scale(0.96) translateY(2px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Botões do Lado Esquerdo (Empilhados) */
         .btn-left-stack {
             width: 130px;
-            height: 40px; /* Altura fixa */
-            border-radius: 8px;
+            height: 40px; 
+            border-radius: 12px;
             font-size: 0.8rem;
             letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.1); 
         }
 
-        /* Botão Preto/Prata Específico */
+        /* Botão Empty Trash (Preto/Prata 3D manteve a sua diretriz original para destaque) */
         .btn-empty-trash {
-            background: #18181b; /* Preto/Cinza bem escuro */
-            border: 2px solid #a1a1aa; /* Bordas prateadas */
-            box-shadow: 0 6px 0 #000, 0 10px 15px rgba(0,0,0,0.5);
+            background: linear-gradient(145deg, #2a2a2a, #000000);
+            border: 2px solid #a8a8a8;
+            border-top: 2px solid #e0e0e0;
+            border-left: 2px solid #e0e0e0;
+            border-bottom: 2px solid #555555;
+            border-right: 2px solid #555555;
+            color: #ffffff;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.8), inset 2px 2px 5px rgba(255,255,255,0.2), inset -2px -2px 5px rgba(0,0,0,0.5);
+            text-shadow: 0 1px 3px #000;
+            transition: all 0.1s ease;
+            border-radius: 8px;
         }
         .btn-empty-trash:active {
-            box-shadow: 0 0px 0 #000, 0 4px 6px rgba(0,0,0,0.5);
+            transform: scale(0.92) translateY(2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.8), inset 2px 2px 8px rgba(0,0,0,0.8);
         }
 
+        /* Neon Rim Esqurdo */
         .btn-undo { 
-            background: #d97706; 
-            box-shadow: 0 6px 0 #92400e, 0 10px 15px rgba(0,0,0,0.5); 
+            border-color: rgba(255, 193, 7, 0.2); 
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1), inset 0 0 5px rgba(255, 193, 7, 0.1);
             visibility: hidden; 
         }
-        .btn-undo:active { box-shadow: 0 0 0 #92400e, 0 4px 6px rgba(0,0,0,0.5); }
-
         .btn-sync { 
-            background: #db2777; 
-            box-shadow: 0 6px 0 #9d174d, 0 10px 15px rgba(0,0,0,0.5); 
+            border-color: rgba(232, 62, 140, 0.2); 
+            box-shadow: 0 4px 15px rgba(232, 62, 140, 0.1), inset 0 0 5px rgba(232, 62, 140, 0.1);
         }
-        .btn-sync:active { box-shadow: 0 0 0 #9d174d, 0 4px 6px rgba(0,0,0,0.5); }
 
-        /* Botões Direita (Altura emparelhada com a esquerda: 40+12+40+12+40 = 144px) */
+        /* Botões do Lado Direito (Vertical 144px) */
         .btn-right-action {
             width: 65px;
-            height: 144px; /* Altura equivalente aos 3 da esquerda */
+            height: 144px; 
             flex-direction: column;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 0.65rem;
             gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1); 
         }
         .btn-right-action .icon { font-size: 1.4rem; }
         
+        /* Neon Rim Direito */
         .btn-red { 
-            background: #dc2626; 
-            box-shadow: 0 6px 0 #991b1b, 0 10px 15px rgba(0,0,0,0.5); 
+            border-color: rgba(220, 53, 69, 0.2); 
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1), inset 0 0 5px rgba(220, 53, 69, 0.1);
         }
-        .btn-red:active { box-shadow: 0 0 0 #991b1b, 0 4px 6px rgba(0,0,0,0.5); }
-        
         .btn-blue { 
-            background: #2563eb; 
-            box-shadow: 0 6px 0 #1e40af, 0 10px 15px rgba(0,0,0,0.5); 
+            border-color: rgba(13, 110, 253, 0.2); 
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1), inset 0 0 5px rgba(13, 110, 253, 0.1);
         }
-        .btn-blue:active { box-shadow: 0 0 0 #1e40af, 0 4px 6px rgba(0,0,0,0.5); }
-        
         .btn-green { 
-            background: #16a34a; 
-            box-shadow: 0 6px 0 #166534, 0 10px 15px rgba(0,0,0,0.5); 
+            border-color: rgba(40, 167, 69, 0.2); 
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1), inset 0 0 5px rgba(40, 167, 69, 0.1);
         }
-        .btn-green:active { box-shadow: 0 0 0 #166534, 0 4px 6px rgba(0,0,0,0.5); }
 
         /* Linha inferior (Botão Privacidade) */
         #hide-strip {
@@ -213,23 +225,21 @@
         }
 
         #hide-btn {
-            background: #4b5563; 
-            border: none;
+            background: rgba(128, 128, 128, 0.5); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #fff;
             padding: 10px 25px;
             border-radius: 25px;
             font-size: 0.8rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 6px 0 #374151, 0 10px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             pointer-events: auto; 
             touch-action: manipulation;
             transition: all 0.1s ease;
             text-transform: uppercase;
-        }
-        #hide-btn:active {
-            transform: translateY(6px);
-            box-shadow: 0 0 0 #374151, 0 4px 6px rgba(0,0,0,0.5);
         }
 
         /* Fim / Vazio */
@@ -254,6 +264,7 @@
             border-radius: 30px;
             font-size: 0.9rem;
             pointer-events: auto;
+            border: 1px solid rgba(13, 110, 253, 0.5); 
         }
 
     </style>
@@ -268,7 +279,7 @@
 
         <div id="end-screen">
             <div id="empty-message">All clear!</div>
-            <button id="second_filter_btn" class="solid-btn btn-blue btn-second-filter" onclick="startSecondFilter()">
+            <button id="second_filter_btn" class="glass-btn btn-blue btn-second-filter" onclick="startSecondFilter()">
                 🔄 Pull Organize (2nd Filter)
             </button>
         </div>
@@ -278,19 +289,19 @@
         
         <div id="controls-wrapper">
             <div class="left-panel">
-                <button id="empty_trash_btn" class="solid-btn btn-left-stack btn-empty-trash" onclick="emptyTrashFolder()">🗑 Empty Trash</button>
-                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ Undo</button>
-                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 Sync</button>
+                <button id="empty_trash_btn" class="btn-left-stack btn-empty-trash" onclick="emptyTrashFolder()">🗑 Empty Trash</button>
+                <button id="undo_button" class="glass-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ Undo</button>
+                <button class="glass-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 Sync</button>
             </div>
             
             <div class="right-panel">
-                <button class="solid-btn btn-right-action btn-red" onclick="handleGlobalAction(1)">
+                <button class="glass-btn btn-right-action btn-red" onclick="handleGlobalAction(1)">
                     <span class="icon">✖</span> Delete
                 </button>
-                <button class="solid-btn btn-right-action btn-blue" onclick="handleGlobalAction(3)">
+                <button class="glass-btn btn-right-action btn-blue" onclick="handleGlobalAction(3)">
                     <span class="icon">📁</span> Organize
                 </button>
-                <button class="solid-btn btn-right-action btn-green" onclick="handleGlobalAction(5)">
+                <button class="glass-btn btn-right-action btn-green" onclick="handleGlobalAction(5)">
                     <span class="icon">★</span> Special
                 </button>
             </div>
@@ -377,7 +388,7 @@
                         pageSize: 1000, 
                         fields: 'nextPageToken, files(id)', 
                         pageToken: pageToken,
-                        orderBy: 'name' // Garante alinhamento A-Z
+                        orderBy: 'name' 
                     });
                     if (response.result.files) count += response.result.files.length;
                     pageToken = response.result.nextPageToken;
@@ -400,7 +411,7 @@
                 'pageSize': 100, 
                 'fields': 'nextPageToken, files(id, thumbnailLink, parents, name)', 
                 'q': query,
-                'orderBy': 'name' // Organização A-Z principal
+                'orderBy': 'name' 
             };
 
             if (nextPageToken) requestParams.pageToken = nextPageToken;
@@ -463,9 +474,9 @@
             const fileId = topCard.dataset.fileId;
             
             let x = 0, y = 0;
-            if (rating === 1) { x = -500; y = 100; } // Delete (Esquerda)
-            else if (rating === 5) { x = 500; y = 100; } // Special (Direita)
-            else if (rating === 3) { x = 500; y = 100; } // Organize (MUDADO: Agora vai para Direita também)
+            if (rating === 1) { x = -500; y = 100; } 
+            else if (rating === 5) { x = 500; y = 100; } 
+            else if (rating === 3) { x = 500; y = 100; } 
             
             animateOut(topCard, fileId, rating, x, y);
         }
