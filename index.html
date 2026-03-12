@@ -621,7 +621,10 @@
 
                 updateCardsVisibility();
 
-                requestAnimationFrame(() => {
+                    // 1. Força o navegador a recalcular a tela (reflow crucial para a animação funcionar)
+                    void card.offsetWidth;
+                
+                    // 2. Aplica a transição sem usar o requestAnimationFrame
                     card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
                     card.style.transform = 'translateY(0) scale(1)';
                     card.style.opacity = '1';
@@ -690,7 +693,7 @@
                         const deletePromises = files.map(file => 
                             gapi.client.drive.files.update({
                                 fileId: file.id,
-                                trashed: true
+                                resource: { trashed: true }                            
                             })
                         );
                         // Aguarda terminar esse lote antes de ir para a próxima página
