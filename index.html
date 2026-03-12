@@ -246,12 +246,14 @@
 
     <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
 
-    <div id="folder-nav">
+    <div id="folder-nav" style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
         <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject">🗑️</button>
         
         <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">Origem</button>
         <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">Manter</button>
         <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">Top</button>
+
+        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" style="position: absolute; right: 10px; background: #333;">🔤 A-Z</button>
     </div>
     
     <div id="info-bar">
@@ -317,6 +319,7 @@
         let totalPhotosInFolder = 0; 
         let currentViewIndex = 0;
         let isScreenHidden = false;
+        let currentSortOrder = 'name'; // NOVO: Define A-Z como padrão
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -447,6 +450,19 @@
             }
         });
 
+        function toggleSortOrder() {
+            const btn = document.getElementById('btn-sort');
+            if (currentSortOrder === 'name') {
+                currentSortOrder = 'createdTime desc'; // Organiza da mais nova para a mais antiga
+                btn.innerHTML = '📅 DATA';
+            } else {
+                currentSortOrder = 'name'; // Volta para ordem alfabética
+                btn.innerHTML = '🔤 A-Z';
+            }
+            // Recarrega a pasta inteira aplicando o novo filtro
+            reloadFolder(); 
+        }
+
         function getActiveFolderId() {
             if (activeFolderKey === 'source') return FOLDERS['source'];
             if (activeFolderKey === 'manter') return FOLDERS[3];
@@ -466,7 +482,7 @@
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query, pageSize: 1000, fields: 'nextPageToken, files(id)', 
-                        pageToken: pageToken, orderBy: 'name' 
+                        pageToken: pageToken, orderBy: currentSortOrder 
                     });
                     if (response.result.files) count += response.result.files.length;
                     pageToken = response.result.nextPageToken;
@@ -490,7 +506,7 @@
                 'pageSize': 100, 
                 'fields': 'nextPageToken, files(id, thumbnailLink, parents)', 
                 'q': query,
-                'orderBy': 'name' 
+                'orderBy': currentSortOrder 
             };
 
             if (nextPageToken) requestParams.pageToken = nextPageToken;
