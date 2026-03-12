@@ -377,7 +377,8 @@
         async function fetchTotalCount() {
             let count = 0;
             let pageToken = null;
-            const query = `'${SOURCE_FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`;
+            // Altere esta linha se os RAWs não aparecerem:
+            const query = `'${SOURCE_FOLDER_ID}' in parents and trashed = false`;
             const countDisplay = document.getElementById('photo-count');
             countDisplay.innerText = "...";
             
