@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
-
+    
     <style>
         /* Layout Principal */
         body { 
@@ -210,13 +210,13 @@
         .solid-btn:active { transform: scale(0.96) translateY(2px); }
 
         .btn-left-stack { width: 130px; height: 46px; border-radius: 12px; font-size: 0.8rem; letter-spacing: 0.5px; }
-
+        
         .btn-undo { border-color: rgba(255, 193, 7, 0.2); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1); visibility: hidden; }
         .btn-sync { border-color: rgba(232, 62, 140, 0.2); box-shadow: 0 4px 15px rgba(232, 62, 140, 0.1); }
 
         .btn-right-action { width: 65px; height: 104px; flex-direction: column; border-radius: 16px; font-size: 0.65rem; gap: 8px; }
         .btn-right-action .icon { font-size: 1.4rem; }
-
+        
         .btn-reject { border-color: rgba(220, 53, 69, 0.2); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1); }
         .btn-manter { border-color: rgba(13, 110, 253, 0.2); box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1); }
         .btn-top { border-color: rgba(40, 167, 69, 0.2); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1); }
@@ -239,13 +239,13 @@
         <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">Manter</button>
         <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">Top</button>
     </div>
-
+    
     <div id="info-bar">
         <div id="photo-count">...</div>
     </div>
 
     <div id="catalog-container">
-
+        
         <div id="nav-left" class="nav-zone" onclick="prevPhoto()">&#10094;</div>
         <div id="nav-right" class="nav-zone" onclick="nextPhoto()">&#10095;</div>
 
@@ -260,7 +260,7 @@
                 <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ VOLTAR</button>
                 <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 SINCRONIZAR</button>
             </div>
-
+            
             <div class="right-panel">
                 <button class="solid-btn btn-right-action btn-red" onclick="handleGlobalAction(1)">
                     <span class="icon">🏴</span> REJECT
@@ -282,12 +282,12 @@
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
-
+        
         const FOLDERS = {
-            'source': '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd',
-            1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH', // Reject
-            3: '1HwsVXHF9I6tA5RfzmDT7L9BBo84lTJTL', // Manter
-            5: '1Auv1qacvBwtQBIZSNJvkblm5XogsSxo_'  // Top
+            'source': '1BA8IT7dnXU5QF5aFkqwzokNcbJnL7Ar-',
+            1: '1-BjrThu-4UVnG3ceMR_cNYfmC2-IJVRV', // Reject
+            3: '1edv5_Wz-ehpqNWa7joxCALyVce37iwxI', // Manter
+            5: '12Z_2tnPrTNhqUztoMvM6mHt9EDhlVRfx'  // Top
         };
 
         let activeFolderKey = 'source'; 
@@ -297,7 +297,7 @@
         let nextPageToken = null;
         let isFetching = false;
         let undoZIndex = 200000; 
-
+        
         const processedIds = new Set(); 
         let actionHistory = []; 
         let totalPhotosInFolder = 0; 
@@ -327,7 +327,7 @@
                 document.getElementById('controls-wrapper').style.display = 'flex'; 
                 document.getElementById('hide-strip').style.display = 'flex'; 
                 document.getElementById('photo-count').style.display = 'block'; 
-
+                
                 loadActiveFolder();
             };
             tokenClient.requestAccessToken(); 
@@ -352,13 +352,13 @@
         function loadActiveFolder() {
             const container = document.getElementById('catalog-container');
             container.querySelectorAll('.card').forEach(c => c.remove());
-
+            
             nextPageToken = null; 
             currentViewIndex = 0;
             processedIds.clear();
             actionHistory = []; 
             updateUndoButtonState();
-
+            
             document.getElementById('end-screen').style.display = 'none'; 
             fetchTotalCount();
             listPhotos();
@@ -383,7 +383,7 @@
                 navRight.style.display = 'none';
                 return;
             }
-
+            
             if (currentViewIndex >= cards.length) currentViewIndex = Math.max(0, cards.length - 1);
             if (currentViewIndex < 0) currentViewIndex = 0;
 
@@ -446,7 +446,7 @@
             const query = `'${currentId}' in parents and mimeType contains 'image/' and trashed = false`;
             const countDisplay = document.getElementById('photo-count');
             countDisplay.innerText = "...";
-
+            
             try {
                 do {
                     const response = await gapi.client.drive.files.list({
@@ -456,7 +456,7 @@
                     if (response.result.files) count += response.result.files.length;
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
-
+                
                 totalPhotosInFolder = count;
                 updateCounterDisplay();
             } catch (e) { countDisplay.innerText = "?"; }
@@ -479,7 +479,7 @@
             };
 
             if (nextPageToken) requestParams.pageToken = nextPageToken;
-
+            
             try {
                 const response = await gapi.client.drive.files.list(requestParams);
                 nextPageToken = response.result.nextPageToken || null;
@@ -528,11 +528,11 @@
             const activeCard = getActiveCard();
             if (!activeCard) return;
             const fileId = activeCard.dataset.fileId;
-
+            
             let x = 0, y = 0;
             if (targetRating === 1) { x = -500; y = 100; } 
             else { x = 500; y = 100; } 
-
+            
             let targetFolderId = FOLDERS[targetRating];
             if (activeFolderKey === 'manter' && targetRating === 3) targetFolderId = FOLDERS['source'];
             if (activeFolderKey === 'top' && targetRating === 5) targetFolderId = FOLDERS['source'];
@@ -547,7 +547,7 @@
             el.style.opacity = '0';
             const imgUrl = el.querySelector('img').src;
             const originFolderId = getActiveFolderId(); 
-
+            
             // 2. Atualiza a UI (próxima foto + contador) de forma 100% síncrona
             updateCardsVisibility(); 
             if (totalPhotosInFolder > 0) totalPhotosInFolder--;
@@ -580,16 +580,16 @@
             if (lastAction.origin === getActiveFolderId()) {
                 totalPhotosInFolder++;
                 updateCounterDisplay();
-
+                
                 processedIds.delete(lastAction.fileId);
                 document.getElementById('end-screen').style.display = 'none';
 
                 const container = document.getElementById('catalog-container');
                 const card = createCardElement(lastAction.fileId, lastAction.imgUrl);
-
+                
                 card.style.transform = 'translateY(-100px) scale(0.9)'; 
                 card.style.opacity = '0';
-
+                
                 const activeCard = getActiveCard();
                 if (activeCard) {
                     container.insertBefore(card, activeCard);
