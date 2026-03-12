@@ -74,6 +74,18 @@
             box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
+        /* Estilo específico para a lixeira */
+        .btn-trash {
+            background: transparent;
+            border-color: rgba(220, 53, 69, 0.5); /* Vermelho sutil */
+            font-size: 1rem;
+            padding: 5px 10px;
+        }
+        .btn-trash:hover {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: #dc3545;
+        }
+
         /* ---------------------------------------------------
            CABEÇALHO (CONTADOR DISCRETO)
            --------------------------------------------------- */
@@ -235,6 +247,8 @@
     <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
 
     <div id="folder-nav">
+        <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject">🗑️</button>
+        
         <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">Origem</button>
         <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">Manter</button>
         <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">Top</button>
@@ -641,6 +655,60 @@
 
         function reloadFolder() {
             loadActiveFolder();
+        }
+
+        async function emptyRejectFolder() {
+            // Pede confirmação antes de apagar
+            const confirmDelete = confirm("Tem certeza que deseja enviar TODAS as fotos da pasta REJECT para a lixeira do Drive?");
+            if (!confirmDelete) return;
+
+            const rejectFolderId = FOLDERS[1];
+            let pageToken = null;
+            const query = `'${rejectFolderId}' in parents and trashed = false`;
+            
+            const trashBtn = document.getElementById('tab-trash');
+            const originalText = trashBtn.innerHTML;
+            
+            try {
+                // Muda o ícone para indicar que está processando
+                trashBtn.innerHTML = "⏳";
+                trashBtn.disabled = true;
+                trashBtn.style.opacity = "0.5";
+
+                do {
+                    // Busca os arquivos na pasta Reject
+                    const response = await gapi.client.drive.files.list({
+                        q: query,
+                        fields: 'nextPageToken, files(id)',
+                        pageToken: pageToken
+                    });
+                    
+                    const files = response.result.files;
+                    if (files && files.length > 0) {
+                        // Envia todos os arquivos da página atual para a lixeira
+                        const deletePromises = files.map(file => 
+                            gapi.client.drive.files.update({
+                                fileId: file.id,
+                                trashed: true
+                            })
+                        );
+                        // Aguarda terminar esse lote antes de ir para a próxima página
+                        await Promise.all(deletePromises);
+                    }
+                    pageToken = response.result.nextPageToken;
+                } while (pageToken);
+
+                alert("Pasta Reject esvaziada com sucesso!");
+
+            } catch (e) {
+                console.error("Erro ao esvaziar a pasta Reject:", e);
+                alert("Ocorreu um erro ao tentar esvaziar a pasta.");
+            } finally {
+                // Restaura o botão da lixeira ao estado normal
+                trashBtn.innerHTML = originalText;
+                trashBtn.disabled = false;
+                trashBtn.style.opacity = "1";
+            }
         }
     </script>
 </body>
