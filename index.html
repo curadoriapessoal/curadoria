@@ -540,7 +540,7 @@
             animateOut(activeCard, fileId, targetFolderId, x, y);
         }
 
-        function animateOut(el, fileId, targetFolderId, x, y) {
+       function animateOut(el, fileId, targetFolderId, x, y) {
             // 1. Marca imediatamente para remoção visual e aplica animação
             el.classList.add('animating'); 
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
@@ -563,11 +563,18 @@
                 checkAndFetchMore();
             }, 200);
 
-            // 4. Executa a API do Google de forma "Fire and Forget" (Não trava a tela)
+            // 4. DISPARA PARA O GOOGLE DRIVE (A CORREÇÃO ESTÁ AQUI)
             if (targetFolderId !== originFolderId) {
                 gapi.client.drive.files.update({
-                    fileId: fileId, addParents: targetFolderId, removeParents: originFolderId
-                }).catch(e => console.error("API error moving image:", e));
+                    fileId: fileId, 
+                    addParents: targetFolderId, 
+                    removeParents: originFolderId,
+                    fields: 'id' // Força a API a executar na hora
+                }).then(function(response) {
+                    console.log("Arquivo movido no Drive com sucesso!", response);
+                }).catch(function(e) {
+                    console.error("Erro na API ao mover a imagem:", e);
+                });
             }
         }
 
@@ -606,10 +613,17 @@
                 });
             }
 
-            // 2. Aciona a API em Background
+            // 2. DISPARA O DESFAZER PARA O GOOGLE DRIVE (A CORREÇÃO ESTÁ AQUI)
             gapi.client.drive.files.update({
-                fileId: lastAction.fileId, addParents: lastAction.origin, removeParents: lastAction.destination
-            }).catch(e => console.error("Undo API error:", e));
+                fileId: lastAction.fileId, 
+                addParents: lastAction.origin, 
+                removeParents: lastAction.destination,
+                fields: 'id'
+            }).then(function(response) {
+                console.log("Ação desfeita no Drive!", response);
+            }).catch(function(e) {
+                console.error("Erro na API de Undo:", e);
+            });
         }
 
         function updateUndoButtonState() {
