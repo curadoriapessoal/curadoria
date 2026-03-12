@@ -45,13 +45,40 @@
         /* ---------------------------------------------------
            NAVEGAÇÃO DE PASTAS (TOP BAR)
            --------------------------------------------------- */
+        /* ---------------------------------------------------
+           NAVEGAÇÃO DE PASTAS (TOP BAR)
+           --------------------------------------------------- */
         #folder-nav {
             width: 100%;
             display: none; 
             justify-content: center;
-            gap: 10px;
-            padding: 5px 0;
+            align-items: center; /* Centraliza verticalmente se houver duas linhas */
+            gap: 6px; /* Espaço um pouco menor para caber melhor no mobile */
+            padding: 5px 10px;
             z-index: 1001;
+            flex-wrap: wrap; /* A mágica: se não couber, ele joga o botão pra linha de baixo sem encavalar */
+            box-sizing: border-box;
+        }
+
+        .folder-tab {
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+            padding: 8px 12px; /* Reduzido levemente */
+            border-radius: 20px;
+            font-size: 0.75rem; /* Fonte ajustada para mobile */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            white-space: nowrap; /* Impede que o texto dentro do próprio botão se divida em duas linhas */
+        }
+
+        .folder-tab.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
         .folder-tab {
@@ -246,14 +273,14 @@
 
     <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
 
-    <div id="folder-nav" style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
+    <div id="folder-nav">
         <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject">🗑️</button>
         
         <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">Origem</button>
         <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">Manter</button>
-        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">Top</button>
+        <button class="folder-tab" onclick="switchFolder(F'top')" id="tab-top">Top</button>
 
-        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" style="position: absolute; right: 10px; background: #333;">🔤 A-Z</button>
+        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()">🔤 A-Z</button>
     </div>
     
     <div id="info-bar">
