@@ -1,408 +1,238 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-    <head>
+<head>
     <title>Editing Pro</title>
     <meta charset="utf-8" />
-    
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --bg:           #0a0906;
-            --border:       rgba(201, 169, 110, 0.12);
-            --border-soft:  rgba(255, 255, 255, 0.07);
-            --gold:         #C9A96E;
-            --gold-dim:     rgba(201, 169, 110, 0.25);
-            --text:         #F0EBE0;
-            --text-muted:   #6B6558;
-            --text-mid:     #9A8E7E;
-            --red:          #C0392B;
-            --blue:         #2E6DA4;
-            --green:        #27775A;
-            --red-glow:     rgba(192, 57,  43,  0.18);
-            --blue-glow:    rgba(46,  109, 164, 0.18);
-            --green-glow:   rgba(39,  119, 90,  0.18);
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-            --font-mono:    'Space Mono', monospace;
-        }
-
-        /* Grain overlay */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 99999;
-            opacity: 0.55;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+        /* Layout Principal */
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            margin: 0; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; 
             height: 100vh;
             width: 100vw;
-            font-family: var(--font-mono);
-            padding-top: 2vh;
+            flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding-top: 2vh; 
         }
 
-        /* ── TÍTULO ── */
-        .app-title {
-            font-family: var(--font-display);
-            font-weight: 300;
-            font-size: 1rem;
-            letter-spacing: 0.35em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            pointer-events: none;
-            padding: 6px 0 0;
-        }
-
-        /* ── BOTÃO DE AUTENTICAÇÃO ── */
-        #auth_button {
-            margin-top: 28vh;
-            padding: 15px 48px;
-            background: transparent;
-            border: 1px solid var(--gold);
-            border-radius: 2px;
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            font-weight: 700;
-            letter-spacing: 0.25em;
+        #auth_button { 
+            padding: 20px 40px; 
+            background: #fff; 
+            border: none;
+            border-radius: 50px; 
+            font-weight: bold;
             cursor: pointer;
-            color: var(--gold);
+            color: #000;
+            box-shadow: 0 6px 0 #ccc, 0 10px 15px rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
             text-transform: uppercase;
-            transition: background 0.25s ease, color 0.25s ease;
-            position: relative;
-            overflow: hidden;
+            margin-top: 30vh; 
+        }
+        #auth_button:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #ccc, 0 4px 6px rgba(0,0,0,0.5);
         }
 
-        #auth_button::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--gold);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.25s ease;
-            z-index: 0;
-        }
-
-        #auth_button span { position: relative; z-index: 1; }
-        #auth_button:hover::before  { transform: scaleX(1); }
-        #auth_button:hover          { color: var(--bg); }
-        #auth_button:active         { opacity: 0.75; }
-
-        /* ── NAVEGAÇÃO DE PASTAS ── */
+        /* ---------------------------------------------------
+           NAVEGAÇÃO DE PASTAS (TOP BAR)
+           --------------------------------------------------- */
         #folder-nav {
             width: 100%;
-            display: none;
+            display: none; 
             justify-content: center;
-            gap: 0;
-            margin-top: 10px;
-            border-bottom: 1px solid var(--border);
+            gap: 10px;
+            padding: 5px 0;
             z-index: 1001;
         }
 
         .folder-tab {
-            background: transparent;
-            color: var(--text-muted);
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 9px 22px;
-            font-family: var(--font-mono);
-            font-size: 0.62rem;
-            font-weight: 700;
-            letter-spacing: 0.2em;
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: color 0.2s ease, border-color 0.2s ease;
+            transition: all 0.2s ease;
             text-transform: uppercase;
-            margin-bottom: -1px;
         }
-
-        .folder-tab:hover { color: var(--text-mid); }
 
         .folder-tab.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
-        /* ── BARRA DE INFO (CONTADOR) ── */
+        /* ---------------------------------------------------
+           CABEÇALHO (CONTADOR DISCRETO)
+           --------------------------------------------------- */
         #info-bar {
             position: relative;
             width: 100%;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 10px 0 2px;
+            align-items: center; 
+            padding: 5px 0;
             z-index: 1000;
             pointer-events: none;
         }
 
         #photo-count {
-            font-family: var(--font-display);
-            font-weight: 300;
-            font-size: 2.8rem;
-            color: var(--text-muted);
-            line-height: 1;
-            letter-spacing: -0.02em;
-            display: none;
-            transition: all 0.3s ease;
+            font-size: 1.2rem; 
+            font-weight: bold;
+            color: #aaa;
+            text-shadow: 0 1px 3px rgba(0,0,0,1);
+            display: none; 
         }
 
-        #photo-count-label {
-            font-family: var(--font-mono);
-            font-size: 0.5rem;
-            letter-spacing: 0.2em;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            text-align: center;
-            margin-top: 3px;
-            opacity: 0.45;
+        /* ---------------------------------------------------
+           CONTAINER DE FOTOS
+           --------------------------------------------------- */
+        #catalog-container { 
+            position: relative; 
+            width: 95vw; 
+            height: 58vh; 
+            margin-top: 1vh; 
             display: none;
-        }
-
-        /* ── CONTAINER DE FOTOS ── */
-        #catalog-container {
-            position: relative;
-            width: 92vw;
-            height: 54vh;
-            margin-top: 10px;
-            display: none;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease; 
         }
 
         @media (min-width: 768px) {
-            #catalog-container { width: 48vw; }
+            #catalog-container { width: 50vw; }
         }
 
-        .card {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
+        .card { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background: transparent; 
+            display: flex; 
+            flex-direction: column; 
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out; 
         }
 
-        .card img {
-            max-width: 100%;
-            max-height: 100%;
+        .card img { 
+            max-width: 100%; 
+            max-height: 100%; 
             width: auto;
             height: auto;
-            object-fit: contain;
+            object-fit: contain; 
             pointer-events: none;
-            border-radius: 4px;
-            box-shadow:
-                0 2px 4px  rgba(0,0,0,0.45),
-                0 8px 24px rgba(0,0,0,0.65),
-                0 24px 48px rgba(0,0,0,0.4),
-                0 0 0 1px rgba(255,255,255,0.04);
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
         }
 
-        /* ── ZONAS DE NAVEGAÇÃO ── */
+        /* Zonas de Toque Laterais Invisíveis */
         .nav-zone {
             position: absolute;
             top: 0; bottom: 0;
-            width: 35%;
-            display: none;
+            width: 35%; 
+            display: none; 
             align-items: center;
-            font-size: 1.1rem;
-            color: transparent;
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.3);
             cursor: pointer;
-            z-index: 500000;
-            transition: color 0.2s ease;
+            z-index: 500000; 
+            transition: background 0.2s ease, color 0.2s ease;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        #nav-left  { left: 0;  justify-content: flex-start; padding-left: 14px; }
-        #nav-right { right: 0; justify-content: flex-end;   padding-right: 14px; }
+        #nav-left { 
+            left: 0; justify-content: flex-start; padding-left: 15px; 
+            background: linear-gradient(to right, rgba(0,0,0,0.3), transparent);
+        }
+        #nav-right { 
+            right: 0; justify-content: flex-end; padding-right: 15px; 
+            background: linear-gradient(to left, rgba(0,0,0,0.3), transparent);
+        }
 
-        .nav-zone:hover  { color: rgba(201, 169, 110, 0.45); }
-        .nav-zone:active { color: var(--gold); }
+        .nav-zone:active { color: rgba(255,255,255,1); background: rgba(255,255,255,0.1); }
 
-        /* ── ÁREA INFERIOR ── */
+        /* ---------------------------------------------------
+           LAYOUT INFERIOR (BOTÕES DE AÇÃO)
+           --------------------------------------------------- */
         #bottom-area {
             position: fixed;
-            bottom: env(safe-area-inset-bottom, 20px);
+            bottom: env(safe-area-inset-bottom, 25px); 
             left: 0;
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px; 
             z-index: 999999;
-            pointer-events: none;
+            pointer-events: none; 
         }
 
         #controls-wrapper {
-            display: none;
+            display: none; 
             justify-content: space-between;
             align-items: flex-end;
-            padding: 0 14px;
+            padding: 0 10px;
             pointer-events: none;
         }
 
-        .left-panel  { display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
-        .right-panel { display: flex; flex-direction: row;    gap: 8px; pointer-events: auto; }
+        .left-panel { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
+        .right-panel { display: flex; flex-direction: row; gap: 10px; pointer-events: auto; }
 
-        /* ── BOTÃO BASE ── */
         .solid-btn {
-            background: rgba(10, 9, 6, 0.82);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            color: var(--text);
-            font-family: var(--font-mono);
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+            color: #fff;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
             display: flex;
             align-items: center;
             justify-content: center;
             text-transform: uppercase;
             touch-action: manipulation;
-            border-radius: 3px;
-            letter-spacing: 0.08em;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .solid-btn:active { transform: scale(0.95); opacity: 0.8; }
+        .solid-btn:active { transform: scale(0.96) translateY(2px); }
 
-        /* Botões do painel esquerdo */
-        .btn-left-stack {
-            width: 120px;
-            height: 42px;
-            font-size: 0.6rem;
-            letter-spacing: 0.1em;
-            border: 1px solid var(--border-soft);
-            gap: 6px;
-        }
+        .btn-left-stack { width: 130px; height: 46px; border-radius: 12px; font-size: 0.8rem; letter-spacing: 0.5px; }
 
-        .btn-undo {
-            border-color: rgba(201, 169, 110, 0.2);
-            color: var(--gold);
-            visibility: hidden;
-        }
-        .btn-undo:hover { background: rgba(201, 169, 110, 0.06); }
+        .btn-undo { border-color: rgba(255, 193, 7, 0.2); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1); visibility: hidden; }
+        .btn-sync { border-color: rgba(232, 62, 140, 0.2); box-shadow: 0 4px 15px rgba(232, 62, 140, 0.1); }
 
-        .btn-sync { color: var(--text-muted); }
-        .btn-sync:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+        .btn-right-action { width: 65px; height: 104px; flex-direction: column; border-radius: 16px; font-size: 0.65rem; gap: 8px; }
+        .btn-right-action .icon { font-size: 1.4rem; }
 
-        /* Botões de ação direita */
-        .btn-right-action {
-            width: 62px;
-            height: 98px;
-            flex-direction: column;
-            border-radius: 3px;
-            font-size: 0.5rem;
-            gap: 10px;
-            letter-spacing: 0.12em;
-            border: 1px solid var(--border-soft);
-            position: relative;
-            overflow: hidden;
-        }
+        .btn-reject { border-color: rgba(220, 53, 69, 0.2); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1); }
+        .btn-manter { border-color: rgba(13, 110, 253, 0.2); box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1); }
+        .btn-top { border-color: rgba(40, 167, 69, 0.2); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1); }
 
-        /* Barra colorida no rodapé de cada botão de ação */
-        .btn-right-action::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 2px;
-            opacity: 0.65;
-            transition: opacity 0.2s ease;
-        }
+        /* Botão Ocultar Tela */
+        #hide-strip { display: none; justify-content: center; width: 100%; pointer-events: none; }
+        #hide-btn { background: rgba(128, 128, 128, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 25px; border-radius: 25px; font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; text-transform: uppercase; }
 
-        .btn-right-action:hover::after { opacity: 1; }
+        #end-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none; flex-direction: column; align-items: center; gap: 20px; z-index: 0; }
+        #empty-message { font-size: 1.2rem; color: #888; text-align: center; margin-bottom: 10px;}
 
-        .btn-reject { border-color: rgba(192, 57,  43,  0.15); }
-        .btn-reject::after { background: var(--red); }
-        .btn-reject:hover  { box-shadow: 0 0 22px var(--red-glow); border-color: rgba(192,57,43,0.3); }
-
-        .btn-manter { border-color: rgba(46,  109, 164, 0.15); }
-        .btn-manter::after { background: var(--blue); }
-        .btn-manter:hover  { box-shadow: 0 0 22px var(--blue-glow); border-color: rgba(46,109,164,0.3); }
-
-        .btn-top { border-color: rgba(39,  119, 90,  0.15); }
-        .btn-top::after { background: var(--green); }
-        .btn-top:hover  { box-shadow: 0 0 22px var(--green-glow); border-color: rgba(39,119,90,0.3); }
-
-        .btn-right-action .icon { font-size: 1.3rem; line-height: 1; }
-        .btn-label { font-size: 0.48rem; letter-spacing: 0.15em; color: var(--text-muted); }
-
-        /* ── BOTÃO OCULTAR ── */
-        #hide-strip {
-            display: none;
-            justify-content: center;
-            width: 100%;
-            pointer-events: none;
-        }
-
-        #hide-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 6px 20px;
-            font-family: var(--font-mono);
-            font-size: 0.52rem;
-            font-weight: 700;
-            letter-spacing: 0.2em;
-            cursor: pointer;
-            pointer-events: auto;
-            text-transform: uppercase;
-            transition: color 0.2s ease, opacity 0.2s ease;
-            opacity: 0.45;
-        }
-
-        #hide-btn:hover { color: var(--text); opacity: 1; }
-
-        /* ── TELA DE PASTA VAZIA ── */
-        #end-screen {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            z-index: 0;
-        }
-
-        #empty-message {
-            font-family: var(--font-display);
-            font-weight: 300;
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            text-align: center;
-            letter-spacing: 0.12em;
-        }
-
-        #empty-message::before { content: '— '; color: var(--gold); opacity: 0.5; }
-        #empty-message::after  { content: ' —'; color: var(--gold); opacity: 0.5; }
     </style>
 </head>
 <body>
 
-    <div class="app-title">Editing Pro</div>
-
-    <button id="auth_button" onclick="handleAuthClick()"><span>Abrir Pasta</span></button>
+    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
 
     <div id="folder-nav">
         <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">Origem</button>
@@ -411,15 +241,14 @@
     </div>
 
     <div id="info-bar">
-        <div style="display:flex; flex-direction:column; align-items:center;">
-            <div id="photo-count">...</div>
-            <div id="photo-count-label">fotos</div>
-        </div>
+        <div id="photo-count">...</div>
     </div>
 
     <div id="catalog-container">
-        <div id="nav-left"  class="nav-zone" onclick="prevPhoto()">&#10094;</div>
+
+        <div id="nav-left" class="nav-zone" onclick="prevPhoto()">&#10094;</div>
         <div id="nav-right" class="nav-zone" onclick="nextPhoto()">&#10095;</div>
+
         <div id="end-screen">
             <div id="empty-message">A pasta está vazia!</div>
         </div>
@@ -428,38 +257,32 @@
     <div id="bottom-area">
         <div id="controls-wrapper">
             <div class="left-panel">
-                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ Voltar</button>
-                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()">↺ Sincronizar</button>
+                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ VOLTAR</button>
+                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 SINCRONIZAR</button>
             </div>
 
             <div class="right-panel">
-                <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)">
-                    <span class="icon">🏴</span>
-                    <span class="btn-label">Reject</span>
+                <button class="solid-btn btn-right-action btn-red" onclick="handleGlobalAction(1)">
+                    <span class="icon">🏴</span> REJECT
                 </button>
-                <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)">
-                    <span class="icon">📁</span>
-                    <span class="btn-label">Manter</span>
+                <button class="solid-btn btn-right-action btn-blue" onclick="handleGlobalAction(3)">
+                    <span class="icon">📁</span> MANTER
                 </button>
-                <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)">
-                    <span class="icon">🏳️</span>
-                    <span class="btn-label">Top</span>
+                <button class="solid-btn btn-right-action btn-green" onclick="handleGlobalAction(5)">
+                    <span class="icon">🏳️</span> TOP
                 </button>
             </div>
         </div>
 
         <div id="hide-strip">
-            <button id="hide-btn" onclick="toggleVisibility()">Ocultar Tela</button>
+            <button id="hide-btn" onclick="toggleVisibility()">OCULTAR TELA</button>
         </div>
     </div>
 
-    <!-- ============================================================
-         JAVASCRIPT — 100% ORIGINAL, NENHUMA ALTERAÇÃO DE LÓGICA
-         ============================================================ -->
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
-        
+
         const FOLDERS = {
             'source': '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd',
             1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH', // Reject
@@ -474,7 +297,7 @@
         let nextPageToken = null;
         let isFetching = false;
         let undoZIndex = 200000; 
-        
+
         const processedIds = new Set(); 
         let actionHistory = []; 
         let totalPhotosInFolder = 0; 
@@ -504,8 +327,7 @@
                 document.getElementById('controls-wrapper').style.display = 'flex'; 
                 document.getElementById('hide-strip').style.display = 'flex'; 
                 document.getElementById('photo-count').style.display = 'block'; 
-                document.getElementById('photo-count-label').style.display = 'block'; 
-                
+
                 loadActiveFolder();
             };
             tokenClient.requestAccessToken(); 
@@ -530,13 +352,13 @@
         function loadActiveFolder() {
             const container = document.getElementById('catalog-container');
             container.querySelectorAll('.card').forEach(c => c.remove());
-            
+
             nextPageToken = null; 
             currentViewIndex = 0;
             processedIds.clear();
             actionHistory = []; 
             updateUndoButtonState();
-            
+
             document.getElementById('end-screen').style.display = 'none'; 
             fetchTotalCount();
             listPhotos();
@@ -561,7 +383,7 @@
                 navRight.style.display = 'none';
                 return;
             }
-            
+
             if (currentViewIndex >= cards.length) currentViewIndex = Math.max(0, cards.length - 1);
             if (currentViewIndex < 0) currentViewIndex = 0;
 
@@ -624,7 +446,7 @@
             const query = `'${currentId}' in parents and mimeType contains 'image/' and trashed = false`;
             const countDisplay = document.getElementById('photo-count');
             countDisplay.innerText = "...";
-            
+
             try {
                 do {
                     const response = await gapi.client.drive.files.list({
@@ -634,7 +456,7 @@
                     if (response.result.files) count += response.result.files.length;
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
-                
+
                 totalPhotosInFolder = count;
                 updateCounterDisplay();
             } catch (e) { countDisplay.innerText = "?"; }
@@ -657,7 +479,7 @@
             };
 
             if (nextPageToken) requestParams.pageToken = nextPageToken;
-            
+
             try {
                 const response = await gapi.client.drive.files.list(requestParams);
                 nextPageToken = response.result.nextPageToken || null;
@@ -706,11 +528,11 @@
             const activeCard = getActiveCard();
             if (!activeCard) return;
             const fileId = activeCard.dataset.fileId;
-            
+
             let x = 0, y = 0;
             if (targetRating === 1) { x = -500; y = 100; } 
             else { x = 500; y = 100; } 
-            
+
             let targetFolderId = FOLDERS[targetRating];
             if (activeFolderKey === 'manter' && targetRating === 3) targetFolderId = FOLDERS['source'];
             if (activeFolderKey === 'top' && targetRating === 5) targetFolderId = FOLDERS['source'];
@@ -725,7 +547,7 @@
             el.style.opacity = '0';
             const imgUrl = el.querySelector('img').src;
             const originFolderId = getActiveFolderId(); 
-            
+
             // 2. Atualiza a UI (próxima foto + contador) de forma 100% síncrona
             updateCardsVisibility(); 
             if (totalPhotosInFolder > 0) totalPhotosInFolder--;
@@ -758,16 +580,16 @@
             if (lastAction.origin === getActiveFolderId()) {
                 totalPhotosInFolder++;
                 updateCounterDisplay();
-                
+
                 processedIds.delete(lastAction.fileId);
                 document.getElementById('end-screen').style.display = 'none';
 
                 const container = document.getElementById('catalog-container');
                 const card = createCardElement(lastAction.fileId, lastAction.imgUrl);
-                
+
                 card.style.transform = 'translateY(-100px) scale(0.9)'; 
                 card.style.opacity = '0';
-                
+
                 const activeCard = getActiveCard();
                 if (activeCard) {
                     container.insertBefore(card, activeCard);
