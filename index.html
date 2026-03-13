@@ -468,12 +468,24 @@
             switch(event.key) {
                 case 'ArrowLeft': prevPhoto(); break;
                 case 'ArrowRight': nextPhoto(); break;
-                case 's': case 'S': handleGlobalAction(1); break;
-                case 'd': case 'D': handleGlobalAction(3); break;
-                case 'f': case 'F': handleGlobalAction(5); break;
-                case 'a': case 'A': reloadFolder(); break;
-                case 'r': case 'R': undoLastAction(); break;
-                case 'g': case 'G': emptyRejectFolder(); break;
+                
+                // Lixeira (Reject)
+                case 's': case 'S': case '4': handleGlobalAction(1); break;
+                
+                // Manter
+                case 'd': case 'D': case '5': handleGlobalAction(3); break;
+                
+                // Top
+                case 'f': case 'F': case '6': handleGlobalAction(5); break;
+                
+                // Sincronizar (Reload)
+                case 'a': case 'A': case '1': reloadFolder(); break;
+                
+                // Desfazer (Undo)
+                case 'r': case 'R': case '2': undoLastAction(); break;
+                
+                // Esvaziar Lixeira (Empty Trash)
+                case 'g': case 'G': case '9': emptyRejectFolder(); break;
             }
         });
 
