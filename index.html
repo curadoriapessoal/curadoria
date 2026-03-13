@@ -466,29 +466,30 @@
             if (event.repeat) return; // Evita metralhar o teclado
 
             switch(event.key) {
+                // --- Navegação de Fotos ---
                 case 'ArrowLeft': prevPhoto(); break;
                 case 'ArrowRight': nextPhoto(); break;
                 
-                // Lixeira (Reject)
-                case 's': case 'S': case '4': handleGlobalAction(1); break;
+                // --- Ações de Classificação (Mover fotos) ---
+                case 's': case 'S': case '4': handleGlobalAction(1); break; // Enviar para Reject
+                case 'd': case 'D': case '5': handleGlobalAction(3); break; // Enviar para Manter
+                case 'f': case 'F': case '6': handleGlobalAction(5); break; // Enviar para Top
                 
-                // Manter
-                case 'd': case 'D': case '5': handleGlobalAction(3); break;
+                // --- Controles Básicos ---
+                case 'a': case 'A': case '2': reloadFolder(); break; // Sincronizar
+                case 'r': case 'R': case '1': undoLastAction(); break; // Desfazer
+                case 'g': case 'G': case '3': emptyRejectFolder(); break; // Esvaziar lixeira (O 9 foi removido daqui)
                 
-                // Top
-                case 'f': case 'F': case '6': handleGlobalAction(5); break;
+                // --- Navegação de Pastas (Abas) ---
+                case '7': switchFolder('source'); break; // Ir para Origem
+                case '8': switchFolder('manter'); break; // Ir para Manter
+                case '9': switchFolder('top'); break;    // Ir para Top
                 
-                // Sincronizar (Reload)
-                case 'a': case 'A': case '1': reloadFolder(); break;
-                
-                // Desfazer (Undo)
-                case 'r': case 'R': case '2': undoLastAction(); break;
-                
-                // Esvaziar Lixeira (Empty Trash)
-                case 'g': case 'G': case '9': emptyRejectFolder(); break;
+                // --- Opções de Visualização ---
+                case '+': toggleSortOrder(); break; // Alternar A-Z / Data
+                case '0': toggleVisibility(); break; // Ocultar Tela
             }
         });
-
         function toggleSortOrder() {
             const btn = document.getElementById('btn-sort');
             if (currentSortOrder === 'name') {
