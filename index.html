@@ -45,13 +45,40 @@
         /* ---------------------------------------------------
            NAVEGAÇÃO DE PASTAS (TOP BAR)
            --------------------------------------------------- */
+        /* ---------------------------------------------------
+           NAVEGAÇÃO DE PASTAS (TOP BAR)
+           --------------------------------------------------- */
         #folder-nav {
             width: 100%;
             display: none; 
             justify-content: center;
-            gap: 10px;
-            padding: 5px 0;
+            align-items: center; /* Centraliza verticalmente se houver duas linhas */
+            gap: 6px; /* Espaço um pouco menor para caber melhor no mobile */
+            padding: 5px 10px;
             z-index: 1001;
+            flex-wrap: wrap; /* A mágica: se não couber, ele joga o botão pra linha de baixo sem encavalar */
+            box-sizing: border-box;
+        }
+
+        .folder-tab {
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+            padding: 8px 12px; /* Reduzido levemente */
+            border-radius: 20px;
+            font-size: 0.75rem; /* Fonte ajustada para mobile */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            white-space: nowrap; /* Impede que o texto dentro do próprio botão se divida em duas linhas */
+        }
+
+        .folder-tab.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
         .folder-tab {
@@ -72,6 +99,18 @@
             color: #000;
             border-color: #fff;
             box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* Estilo específico para a lixeira */
+        .btn-trash {
+            background: transparent;
+            border-color: rgba(220, 53, 69, 0.5); /* Vermelho sutil */
+            font-size: 1rem;
+            padding: 5px 10px;
+        }
+        .btn-trash:hover {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: #dc3545;
         }
 
         /* ---------------------------------------------------
@@ -235,9 +274,13 @@
     <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
 
     <div id="folder-nav">
+        <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject">🗑️</button>
+        
         <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">Origem</button>
         <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">Manter</button>
         <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">Top</button>
+
+        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()">🔤 A-Z</button>
     </div>
     
     <div id="info-bar">
@@ -303,6 +346,7 @@
         let totalPhotosInFolder = 0; 
         let currentViewIndex = 0;
         let isScreenHidden = false;
+        let currentSortOrder = 'name'; // NOVO: Define A-Z como padrão
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -422,15 +466,42 @@
             if (event.repeat) return; // Evita metralhar o teclado
 
             switch(event.key) {
+                // --- Navegação de Fotos ---
                 case 'ArrowLeft': prevPhoto(); break;
                 case 'ArrowRight': nextPhoto(); break;
-                case 's': case 'S': handleGlobalAction(1); break;
-                case 'd': case 'D': handleGlobalAction(3); break;
-                case 'f': case 'F': handleGlobalAction(5); break;
-                case 'a': case 'A': reloadFolder(); break;
-                case 'q': case 'Q': undoLastAction(); break;
+                
+                // --- Ações de Classificação (Mover fotos) ---
+                case 's': case 'S': case '4': handleGlobalAction(1); break; // Enviar para Reject
+                case 'd': case 'D': case '5': handleGlobalAction(3); break; // Enviar para Manter
+                case 'f': case 'F': case '6': handleGlobalAction(5); break; // Enviar para Top
+                
+                // --- Controles Básicos ---
+                case 'a': case 'A': case '2': reloadFolder(); break; // Sincronizar
+                case 'r': case 'R': case '1': undoLastAction(); break; // Desfazer
+                case 'g': case 'G': case '3': emptyRejectFolder(); break; // Esvaziar lixeira (O 9 foi removido daqui)
+                
+                // --- Navegação de Pastas (Abas) ---
+                case '7': switchFolder('source'); break; // Ir para Origem
+                case '8': switchFolder('manter'); break; // Ir para Manter
+                case '9': switchFolder('top'); break;    // Ir para Top
+                
+                // --- Opções de Visualização ---
+                case '+': toggleSortOrder(); break; // Alternar A-Z / Data
+                case '0': toggleVisibility(); break; // Ocultar Tela
             }
         });
+        function toggleSortOrder() {
+            const btn = document.getElementById('btn-sort');
+            if (currentSortOrder === 'name') {
+                currentSortOrder = 'createdTime desc'; // Organiza da mais nova para a mais antiga
+                btn.innerHTML = '📅 DATA';
+            } else {
+                currentSortOrder = 'name'; // Volta para ordem alfabética
+                btn.innerHTML = '🔤 A-Z';
+            }
+            // Recarrega a pasta inteira aplicando o novo filtro
+            reloadFolder(); 
+        }
 
         function getActiveFolderId() {
             if (activeFolderKey === 'source') return FOLDERS['source'];
@@ -451,7 +522,7 @@
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query, pageSize: 1000, fields: 'nextPageToken, files(id)', 
-                        pageToken: pageToken, orderBy: 'name' 
+                        pageToken: pageToken, orderBy: currentSortOrder 
                     });
                     if (response.result.files) count += response.result.files.length;
                     pageToken = response.result.nextPageToken;
@@ -475,7 +546,7 @@
                 'pageSize': 100, 
                 'fields': 'nextPageToken, files(id, thumbnailLink, parents)', 
                 'q': query,
-                'orderBy': 'name' 
+                'orderBy': currentSortOrder 
             };
 
             if (nextPageToken) requestParams.pageToken = nextPageToken;
@@ -606,14 +677,16 @@
 
                 updateCardsVisibility();
 
-                requestAnimationFrame(() => {
-                    card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
-                    card.style.transform = 'translateY(0) scale(1)';
-                    card.style.opacity = '1';
-                });
-            }
+                // 1. Força o navegador a recalcular a tela (reflow crucial para a animação funcionar)
+                void card.offsetWidth;
+            
+                // 2. Aplica a transição
+                card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
+                card.style.transform = 'translateY(0) scale(1)';
+                card.style.opacity = '1';
+            } // <- O erro estava aqui. Agora tem apenas a chave fechando o bloco do 'if'.
 
-            // 2. DISPARA O DESFAZER PARA O GOOGLE DRIVE (A CORREÇÃO ESTÁ AQUI)
+            // 2. DISPARA O DESFAZER PARA O GOOGLE DRIVE
             gapi.client.drive.files.update({
                 fileId: lastAction.fileId, 
                 addParents: lastAction.origin, 
@@ -641,6 +714,65 @@
 
         function reloadFolder() {
             loadActiveFolder();
+        }
+
+        async function emptyRejectFolder() {
+            const rejectFolderId = FOLDERS[1];
+            let pageToken = null;
+            const query = `'${rejectFolderId}' in parents and trashed = false`;
+            
+            const trashBtn = document.getElementById('tab-trash');
+            const originalText = trashBtn.innerHTML;
+            
+            let deletedCount = 0; // Inicializa o contador de arquivos
+            
+            try {
+                // Muda o ícone para indicar que está processando
+                trashBtn.innerHTML = "⏳";
+                trashBtn.disabled = true;
+                trashBtn.style.opacity = "0.5";
+
+                do {
+                    // Busca os arquivos na pasta Reject
+                    const response = await gapi.client.drive.files.list({
+                        q: query,
+                        fields: 'nextPageToken, files(id)',
+                        pageToken: pageToken
+                    });
+                    
+                    const files = response.result.files;
+                    if (files && files.length > 0) {
+                        deletedCount += files.length; // Soma a quantidade de arquivos deste lote
+
+                        // Envia todos os arquivos da página atual para a lixeira
+                        const deletePromises = files.map(file => 
+                            gapi.client.drive.files.update({
+                                fileId: file.id,
+                                resource: { trashed: true }                            
+                            })
+                        );
+                        // Aguarda terminar esse lote antes de ir para a próxima página
+                        await Promise.all(deletePromises);
+                    }
+                    pageToken = response.result.nextPageToken;
+                } while (pageToken);
+
+                // Exibe a mensagem final com a contagem exata
+                if (deletedCount > 0) {
+                    alert(`${deletedCount} arquivo(s) enviado(s) para a lixeira com sucesso.`);
+                } else {
+                    alert("A pasta Reject já estava vazia.");
+                }
+
+            } catch (e) {
+                console.error("Erro ao esvaziar a pasta Reject:", e);
+                alert("Ocorreu um erro ao tentar esvaziar a pasta.");
+            } finally {
+                // Restaura o botão da lixeira ao estado normal
+                trashBtn.innerHTML = originalText;
+                trashBtn.disabled = false;
+                trashBtn.style.opacity = "1";
+            }
         }
     </script>
 </body>
