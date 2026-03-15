@@ -492,13 +492,21 @@
         });
         function toggleSortOrder() {
             const btn = document.getElementById('btn-sort');
+            
             if (currentSortOrder === 'name') {
-                currentSortOrder = 'createdTime desc'; // Organiza da mais nova para a mais antiga
-                btn.innerHTML = '📅 DATA';
+                // De A-Z vai para Data (Mais nova para mais antiga)
+                currentSortOrder = 'createdTime desc'; 
+                btn.innerHTML = '📅 TIME';
+            } else if (currentSortOrder === 'createdTime desc') {
+                // De Data vai para Tamanho (Maior para menor)
+                currentSortOrder = 'quotaBytesUsed desc'; 
+                btn.innerHTML = '💾 SIZE';
             } else {
-                currentSortOrder = 'name'; // Volta para ordem alfabética
+                // De Tamanho volta para A-Z
+                currentSortOrder = 'name'; 
                 btn.innerHTML = '🔤 A-Z';
             }
+            
             // Recarrega a pasta inteira aplicando o novo filtro
             reloadFolder(); 
         }
