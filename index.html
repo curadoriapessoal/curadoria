@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <title>Editing Pro</title>
@@ -36,6 +36,8 @@
             transition: all 0.1s ease;
             text-transform: uppercase;
             margin-top: 30vh; 
+            position: relative;
+            z-index: 999999;
         }
         #auth_button:active {
             transform: translateY(6px);
@@ -184,7 +186,7 @@
         #danger-zone {
             display: none; 
             position: absolute;
-            bottom: 22vh; /* Posicionado acima dos controles principais */
+            bottom: 22vh; 
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
@@ -430,23 +432,38 @@
         let inactivityTimer = null;
         const INACTIVITY_DELAY = 5000; // 5 segundos
 
-        function gapiLoaded() { gapi.load('client', () => {
-            gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
-            .then(() => { gapiInited = true; maybeEnableButtons(); });
-        });}
+        function gapiLoaded() { 
+            gapi.load('client', () => {
+                gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
+                .then(() => { gapiInited = true; maybeEnableButtons(); })
+                .catch(err => console.error("Erro GAPI", err));
+            });
+        }
 
         function initTokenClient() {
-            tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' });
+            // CORREÇÃO: O callback não pode ser uma string vazia, deve ser uma função
+            tokenClient = google.accounts.oauth2.initTokenClient({ 
+                client_id: CLIENT_ID, 
+                scope: SCOPES, 
+                callback: (resp) => {} 
+            });
             gsisInited = true;
             maybeEnableButtons();
         }
 
         function maybeEnableButtons() {
-            if (gapiInited && gsisInited) document.getElementById('auth_button').style.display = 'block';
+            if (gapiInited && gsisInited) {
+                document.getElementById('auth_button').style.display = 'block';
+            }
         }
 
         function handleAuthClick() {
             tokenClient.callback = async (resp) => {
+                if (resp.error) {
+                    console.error("Erro na autenticação:", resp);
+                    return;
+                }
+                
                 document.getElementById('auth_button').style.display = 'none';
                 document.getElementById('folder-nav').style.display = 'flex';
                 document.getElementById('catalog-container').style.display = 'block';
@@ -456,7 +473,7 @@
                 document.getElementById('danger-zone').style.display = 'block'; 
                 
                 loadActiveFolder();
-                resetInactivityTimer(); // Inicia o monitoramento de inatividade ao logar
+                resetInactivityTimer(); // Inicia o monitoramento após login
             };
             tokenClient.requestAccessToken(); 
         }
@@ -464,14 +481,18 @@
         // ----- FUNÇÕES DE CONTROLE DE VISIBILIDADE E INATIVIDADE -----
         function hideImageArea() {
             const container = document.getElementById('catalog-container');
-            isScreenHidden = true;
-            container.style.opacity = '0.01';
+            if (container) {
+                isScreenHidden = true;
+                container.style.opacity = '0.01';
+            }
         }
 
         function showImageArea() {
             const container = document.getElementById('catalog-container');
-            isScreenHidden = false;
-            container.style.opacity = '1';
+            if (container) {
+                isScreenHidden = false;
+                container.style.opacity = '1';
+            }
         }
 
         function toggleVisibility() {
@@ -480,27 +501,33 @@
                 resetInactivityTimer();
             } else {
                 hideImageArea();
-                clearTimeout(inactivityTimer); // Evita que o timer reexiba ou sobrescreva a ação
+                clearTimeout(inactivityTimer); 
             }
         }
 
         function resetInactivityTimer() {
-            // Se a tela estava oculta, mostra novamente por causa da atividade
-            if (isScreenHidden) {
-                showImageArea();
-            }
-            
-            clearTimeout(inactivityTimer);
-            
-            // Só arma o timer se a interface já estiver ativa (botão de login sumiu)
-            if (document.getElementById('auth_button').style.display === 'none') {
-                inactivityTimer = setTimeout(hideImageArea, INACTIVITY_DELAY);
+            try {
+                if (isScreenHidden) {
+                    showImageArea();
+                }
+                
+                clearTimeout(inactivityTimer);
+                
+                const authBtn = document.getElementById('auth_button');
+                // Só arma o timer se o botão de login já sumiu (usuário logado)
+                if (authBtn && authBtn.style.display === 'none') {
+                    inactivityTimer = setTimeout(hideImageArea, INACTIVITY_DELAY);
+                }
+            } catch (e) {
+                console.error("Erro no temporizador:", e);
             }
         }
 
-        // Listeners globais para resetar o timer ao menor sinal de atividade
-        ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
-            document.addEventListener(evt, resetInactivityTimer);
+        // Adiciona os ouvintes de evento de forma passiva (não bloqueiam a thread principal)
+        window.addEventListener('DOMContentLoaded', () => {
+            ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
+                document.addEventListener(evt, resetInactivityTimer, { passive: true });
+            });
         });
         // -------------------------------------------------------------
 
