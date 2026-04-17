@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <title>Editing Pro</title>
@@ -320,7 +320,7 @@
         .btn-manter { border-color: rgba(13, 110, 253, 0.2); box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1); }
         .btn-top { border-color: rgba(40, 167, 69, 0.2); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1); }
 
-        /* Botão Ocultar Tela */
+        /* Botão Ocultar/Ativar Tela */
         #hide-strip { display: none; justify-content: center; width: 100%; pointer-events: none; }
         #hide-btn { background: rgba(128, 128, 128, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 25px; border-radius: 25px; font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; text-transform: uppercase; }
 
@@ -430,7 +430,7 @@
 
         // ----- VARIÁVEIS PARA CONTROLE DE INATIVIDADE -----
         let inactivityTimer = null;
-        const INACTIVITY_DELAY = 5000; // 5 segundos
+        const INACTIVITY_DELAY = 10000; // Alterado para 10 segundos
 
         function gapiLoaded() { 
             gapi.load('client', () => {
@@ -441,7 +441,6 @@
         }
 
         function initTokenClient() {
-            // CORREÇÃO: O callback não pode ser uma string vazia, deve ser uma função
             tokenClient = google.accounts.oauth2.initTokenClient({ 
                 client_id: CLIENT_ID, 
                 scope: SCOPES, 
@@ -481,17 +480,21 @@
         // ----- FUNÇÕES DE CONTROLE DE VISIBILIDADE E INATIVIDADE -----
         function hideImageArea() {
             const container = document.getElementById('catalog-container');
+            const hideBtn = document.getElementById('hide-btn');
             if (container) {
                 isScreenHidden = true;
                 container.style.opacity = '0.01';
+                if (hideBtn) hideBtn.innerText = 'ATIVAR TELA'; // Muda o texto do botão
             }
         }
 
         function showImageArea() {
             const container = document.getElementById('catalog-container');
+            const hideBtn = document.getElementById('hide-btn');
             if (container) {
                 isScreenHidden = false;
                 container.style.opacity = '1';
+                if (hideBtn) hideBtn.innerText = 'OCULTAR TELA'; // Muda o texto do botão
             }
         }
 
@@ -507,15 +510,11 @@
 
         function resetInactivityTimer() {
             try {
-                if (isScreenHidden) {
-                    showImageArea();
-                }
-                
                 clearTimeout(inactivityTimer);
                 
                 const authBtn = document.getElementById('auth_button');
-                // Só arma o timer se o botão de login já sumiu (usuário logado)
-                if (authBtn && authBtn.style.display === 'none') {
+                // Só arma o timer se o usuário estiver logado e a tela não estiver oculta
+                if (authBtn && authBtn.style.display === 'none' && !isScreenHidden) {
                     inactivityTimer = setTimeout(hideImageArea, INACTIVITY_DELAY);
                 }
             } catch (e) {
@@ -523,7 +522,8 @@
             }
         }
 
-        // Adiciona os ouvintes de evento de forma passiva (não bloqueiam a thread principal)
+        // Adiciona os ouvintes de evento de forma passiva. 
+        // Eles agora servem apenas para adiar o timer enquanto a tela estiver ativa.
         window.addEventListener('DOMContentLoaded', () => {
             ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
                 document.addEventListener(evt, resetInactivityTimer, { passive: true });
