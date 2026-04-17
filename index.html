@@ -423,10 +423,10 @@
         let actionHistory = []; 
         let totalPhotosInFolder = 0; 
         let currentViewIndex = 0;
+        let isScreenHidden = false;
         let currentSortOrder = 'name'; 
 
-        // ----- NOVAS VARIÁVEIS PARA CONTROLE DE INATIVIDADE -----
-        let isScreenHidden = false;
+        // ----- VARIÁVEIS PARA CONTROLE DE INATIVIDADE -----
         let inactivityTimer = null;
         const INACTIVITY_DELAY = 5000; // 5 segundos
 
@@ -939,3 +939,21 @@
                 if (deletedCount > 0) {
                     alert(`${deletedCount} arquivo(s) da Curadoria enviado(s) para a lixeira do Drive com sucesso.`);
                     if (activeFolderKey === 'source') {
+                        reloadFolder(); 
+                    }
+                } else {
+                    alert("A pasta Curadoria já estava vazia.");
+                }
+
+            } catch (e) {
+                console.error("Erro ao esvaziar a pasta Curadoria:", e);
+                alert("Ocorreu um erro ao tentar esvaziar a pasta da Origem.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
+        }
+    </script>
+</body>
+</html>
