@@ -45,18 +45,15 @@
         /* ---------------------------------------------------
            NAVEGAÇÃO DE PASTAS (TOP BAR)
            --------------------------------------------------- */
-        /* ---------------------------------------------------
-           NAVEGAÇÃO DE PASTAS (TOP BAR)
-           --------------------------------------------------- */
         #folder-nav {
             width: 100%;
             display: none; 
             justify-content: center;
-            align-items: center; /* Centraliza verticalmente se houver duas linhas */
-            gap: 6px; /* Espaço um pouco menor para caber melhor no mobile */
+            align-items: center; 
+            gap: 6px; 
             padding: 5px 10px;
             z-index: 1001;
-            flex-wrap: wrap; /* A mágica: se não couber, ele joga o botão pra linha de baixo sem encavalar */
+            flex-wrap: wrap; 
             box-sizing: border-box;
         }
 
@@ -64,34 +61,14 @@
             background: #222;
             color: #888;
             border: 1px solid #444;
-            padding: 8px 12px; /* Reduzido levemente */
+            padding: 8px 12px; 
             border-radius: 20px;
-            font-size: 0.75rem; /* Fonte ajustada para mobile */
+            font-size: 0.75rem; 
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
             text-transform: uppercase;
-            white-space: nowrap; /* Impede que o texto dentro do próprio botão se divida em duas linhas */
-        }
-
-        .folder-tab.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
-        }
-
-        .folder-tab {
-            background: #222;
-            color: #888;
-            border: 1px solid #444;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
+            white-space: nowrap; 
         }
 
         .folder-tab.active {
@@ -104,7 +81,7 @@
         /* Estilo específico para a lixeira */
         .btn-trash {
             background: transparent;
-            border-color: rgba(220, 53, 69, 0.5); /* Vermelho sutil */
+            border-color: rgba(220, 53, 69, 0.5); 
             font-size: 1rem;
             padding: 5px 10px;
         }
@@ -202,6 +179,87 @@
         .nav-zone:active { color: rgba(255,255,255,1); background: rgba(255,255,255,0.1); }
 
         /* ---------------------------------------------------
+           BOTÃO ZONA DE PERIGO (Longe dos controles)
+           --------------------------------------------------- */
+        #danger-zone {
+            display: none; 
+            position: absolute;
+            bottom: 22vh; /* Posicionado acima dos controles principais */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        #btn-empty-curadoria {
+            background: rgba(220, 53, 69, 0.05);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: rgba(220, 53, 69, 0.8);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+        }
+
+        #btn-empty-curadoria:hover {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        /* ---------------------------------------------------
+           MODAL DE CONFIRMAÇÃO (POPUP)
+           --------------------------------------------------- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #111;
+            border: 1px solid #dc3545;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85vw;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(220, 53, 69, 0.3);
+            font-family: sans-serif;
+        }
+
+        .modal-content h3 { color: #dc3545; margin-top: 0; font-size: 1.2rem;}
+        .modal-content p { color: #ccc; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
+        
+        .checkbox-container {
+            display: flex; align-items: flex-start; gap: 10px;
+            text-align: left; font-size: 0.85rem; color: #fff;
+            background: #222; padding: 12px; border-radius: 8px; margin-bottom: 25px;
+            cursor: pointer;
+        }
+
+        .checkbox-container input { margin-top: 2px; accent-color: #dc3545; width: 18px; height: 18px; }
+        
+        .modal-actions { display: flex; gap: 10px; justify-content: space-between; }
+        
+        .btn-cancel, .btn-confirm {
+            flex: 1; padding: 12px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.8rem;
+        }
+        
+        .btn-cancel { background: #444; color: #fff; }
+        .btn-confirm { background: #dc3545; color: #fff; opacity: 0.4; cursor: not-allowed; transition: all 0.2s;}
+        .btn-confirm.enabled { opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
+
+        /* ---------------------------------------------------
            LAYOUT INFERIOR (BOTÕES DE AÇÃO)
            --------------------------------------------------- */
         #bottom-area {
@@ -288,13 +346,16 @@
     </div>
 
     <div id="catalog-container">
-        
         <div id="nav-left" class="nav-zone" onclick="prevPhoto()">&#10094;</div>
         <div id="nav-right" class="nav-zone" onclick="nextPhoto()">&#10095;</div>
 
         <div id="end-screen">
             <div id="empty-message">A pasta está vazia!</div>
         </div>
+    </div>
+
+    <div id="danger-zone">
+        <button id="btn-empty-curadoria" onclick="openCuradoriaModal()">Esvaziar Curadoria</button>
     </div>
 
     <div id="bottom-area">
@@ -305,13 +366,13 @@
             </div>
             
             <div class="right-panel">
-                <button class="solid-btn btn-right-action btn-red" onclick="handleGlobalAction(1)">
+                <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)">
                     <span class="icon">🏴</span> REJECT
                 </button>
-                <button class="solid-btn btn-right-action btn-blue" onclick="handleGlobalAction(3)">
+                <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)">
                     <span class="icon">📁</span> MANTER
                 </button>
-                <button class="solid-btn btn-right-action btn-green" onclick="handleGlobalAction(5)">
+                <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)">
                     <span class="icon">🏳️</span> TOP
                 </button>
             </div>
@@ -322,15 +383,32 @@
         </div>
     </div>
 
+    <div id="curadoria-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>⚠️ ATENÇÃO EXTREMA ⚠️</h3>
+            <p>Você está prestes a enviar <b>TODOS</b> os arquivos da pasta <b>Curadoria (Origem)</b> para a Lixeira do seu Google Drive.</p>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="confirm-checkbox" onchange="toggleConfirmButton()">
+                Eu entendo que esta ação apagará as fotos em lote e não poderá ser desfeita por aqui.
+            </label>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeCuradoriaModal()">CANCELAR</button>
+                <button id="btn-confirm-delete" class="btn-confirm" onclick="executeEmptyCuradoria()" disabled>EXCLUIR TUDO</button>
+            </div>
+        </div>
+    </div>
+
     <script type="text/javascript">
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
         
         const FOLDERS = {
-            'source': '1C0Kt0kLFr_Ka4XK-UhRfquwxhysXbyTd',
-            1: '1JFV-aW8cl_wb1uE2St4-rrv78t2NwvZH', // Reject
-            3: '1HwsVXHF9I6tA5RfzmDT7L9BBo84lTJTL', // Manter
-            5: '1Auv1qacvBwtQBIZSNJvkblm5XogsSxo_'  // Top
+            'source': '1l5c1yWkNJWI3NIKp_6Fnxs56nzc44P6F',
+            1: '1UL8zEJGWWH2A1NEt-pUhRDQ9sTj9KI6w', // Reject
+            3: '1HDf3BCTUulwYA_IdF2AlTmZcy_TyO19x', // Manter
+            5: '1uHGn2rpZJj68QSe0EVJNh8JCXl7oiKoh'  // Top
         };
 
         let activeFolderKey = 'source'; 
@@ -345,8 +423,12 @@
         let actionHistory = []; 
         let totalPhotosInFolder = 0; 
         let currentViewIndex = 0;
+        let currentSortOrder = 'name'; 
+
+        // ----- NOVAS VARIÁVEIS PARA CONTROLE DE INATIVIDADE -----
         let isScreenHidden = false;
-        let currentSortOrder = 'name'; // NOVO: Define A-Z como padrão
+        let inactivityTimer = null;
+        const INACTIVITY_DELAY = 5000; // 5 segundos
 
         function gapiLoaded() { gapi.load('client', () => {
             gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -371,17 +453,56 @@
                 document.getElementById('controls-wrapper').style.display = 'flex'; 
                 document.getElementById('hide-strip').style.display = 'flex'; 
                 document.getElementById('photo-count').style.display = 'block'; 
+                document.getElementById('danger-zone').style.display = 'block'; 
                 
                 loadActiveFolder();
+                resetInactivityTimer(); // Inicia o monitoramento de inatividade ao logar
             };
             tokenClient.requestAccessToken(); 
         }
 
-        function toggleVisibility() {
+        // ----- FUNÇÕES DE CONTROLE DE VISIBILIDADE E INATIVIDADE -----
+        function hideImageArea() {
             const container = document.getElementById('catalog-container');
-            isScreenHidden = !isScreenHidden;
-            container.style.opacity = isScreenHidden ? '0.01' : '1';
+            isScreenHidden = true;
+            container.style.opacity = '0.01';
         }
+
+        function showImageArea() {
+            const container = document.getElementById('catalog-container');
+            isScreenHidden = false;
+            container.style.opacity = '1';
+        }
+
+        function toggleVisibility() {
+            if (isScreenHidden) {
+                showImageArea();
+                resetInactivityTimer();
+            } else {
+                hideImageArea();
+                clearTimeout(inactivityTimer); // Evita que o timer reexiba ou sobrescreva a ação
+            }
+        }
+
+        function resetInactivityTimer() {
+            // Se a tela estava oculta, mostra novamente por causa da atividade
+            if (isScreenHidden) {
+                showImageArea();
+            }
+            
+            clearTimeout(inactivityTimer);
+            
+            // Só arma o timer se a interface já estiver ativa (botão de login sumiu)
+            if (document.getElementById('auth_button').style.display === 'none') {
+                inactivityTimer = setTimeout(hideImageArea, INACTIVITY_DELAY);
+            }
+        }
+
+        // Listeners globais para resetar o timer ao menor sinal de atividade
+        ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
+            document.addEventListener(evt, resetInactivityTimer);
+        });
+        // -------------------------------------------------------------
 
         function switchFolder(folderKey) {
             if (activeFolderKey === folderKey) return; 
@@ -390,6 +511,9 @@
             document.getElementById('tab-' + folderKey).classList.add('active');
 
             activeFolderKey = folderKey;
+            
+            document.getElementById('danger-zone').style.display = (folderKey === 'source') ? 'block' : 'none';
+
             loadActiveFolder();
         }
 
@@ -463,51 +587,37 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.repeat) return; // Evita metralhar o teclado
+            if (event.repeat) return; 
 
             switch(event.key) {
-                // --- Navegação de Fotos ---
                 case 'ArrowLeft': prevPhoto(); break;
                 case 'ArrowRight': nextPhoto(); break;
-                
-                // --- Ações de Classificação (Mover fotos) ---
-                case 's': case 'S': case '4': handleGlobalAction(1); break; // Enviar para Reject
-                case 'd': case 'D': case '5': handleGlobalAction(3); break; // Enviar para Manter
-                case 'f': case 'F': case '6': handleGlobalAction(5); break; // Enviar para Top
-                
-                // --- Controles Básicos ---
-                case 'a': case 'A': case '2': reloadFolder(); break; // Sincronizar
-                case 'r': case 'R': case '1': undoLastAction(); break; // Desfazer
-                case 'g': case 'G': case '3': emptyRejectFolder(); break; // Esvaziar lixeira (O 9 foi removido daqui)
-                
-                // --- Navegação de Pastas (Abas) ---
-                case '7': switchFolder('source'); break; // Ir para Origem
-                case '8': switchFolder('manter'); break; // Ir para Manter
-                case '9': switchFolder('top'); break;    // Ir para Top
-                
-                // --- Opções de Visualização ---
-                case '+': toggleSortOrder(); break; // Alternar A-Z / Data
-                case '0': toggleVisibility(); break; // Ocultar Tela
+                case 's': case 'S': case '4': handleGlobalAction(1); break; 
+                case 'd': case 'D': case '5': handleGlobalAction(3); break; 
+                case 'f': case 'F': case '6': handleGlobalAction(5); break; 
+                case 'a': case 'A': case '2': reloadFolder(); break; 
+                case 'r': case 'R': case '1': undoLastAction(); break; 
+                case 'g': case 'G': case '3': emptyRejectFolder(); break; 
+                case '7': switchFolder('source'); break; 
+                case '8': switchFolder('manter'); break; 
+                case '9': switchFolder('top'); break;    
+                case '+': toggleSortOrder(); break; 
+                case '0': toggleVisibility(); break; 
             }
         });
+
         function toggleSortOrder() {
             const btn = document.getElementById('btn-sort');
-            
             if (currentSortOrder === 'name') {
-                // De A-Z vai para Data (Mais nova para mais antiga)
                 currentSortOrder = 'createdTime desc'; 
                 btn.innerHTML = '📅 TIME';
             } else if (currentSortOrder === 'createdTime desc') {
-                // De Data vai para Tamanho (Maior para menor)
                 currentSortOrder = 'quotaBytesUsed desc'; 
                 btn.innerHTML = '💾 SIZE';
             } else {
-                // De Tamanho volta para A-Z
                 currentSortOrder = 'name'; 
                 btn.innerHTML = '🔤 A-Z';
             }
-            
-            // Recarrega a pasta inteira aplicando o novo filtro
             reloadFolder(); 
         }
 
@@ -602,7 +712,6 @@
             return card;
         }
 
-        // --- LÓGICA DE AÇÃO DESACOPLADA E ASSÍNCRONA ---
         function handleGlobalAction(targetRating) {
             const activeCard = getActiveCard();
             if (!activeCard) return;
@@ -620,35 +729,30 @@
         }
 
        function animateOut(el, fileId, targetFolderId, x, y) {
-            // 1. Marca imediatamente para remoção visual e aplica animação
             el.classList.add('animating'); 
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
             const imgUrl = el.querySelector('img').src;
             const originFolderId = getActiveFolderId(); 
             
-            // 2. Atualiza a UI (próxima foto + contador) de forma 100% síncrona
             updateCardsVisibility(); 
             if (totalPhotosInFolder > 0) totalPhotosInFolder--;
             updateCounterDisplay();
 
-            // Salva histórico local
             actionHistory.push({ fileId: fileId, destination: targetFolderId, origin: originFolderId, imgUrl: imgUrl });
             updateUndoButtonState();
 
-            // 3. Remove a DIV do DOM quando a animação CSS termina
             setTimeout(() => {
                 el.remove();
                 checkAndFetchMore();
             }, 200);
 
-            // 4. DISPARA PARA O GOOGLE DRIVE (A CORREÇÃO ESTÁ AQUI)
             if (targetFolderId !== originFolderId) {
                 gapi.client.drive.files.update({
                     fileId: fileId, 
                     addParents: targetFolderId, 
                     removeParents: originFolderId,
-                    fields: 'id' // Força a API a executar na hora
+                    fields: 'id' 
                 }).then(function(response) {
                     console.log("Arquivo movido no Drive com sucesso!", response);
                 }).catch(function(e) {
@@ -662,7 +766,6 @@
             const lastAction = actionHistory.pop();
             updateUndoButtonState();
 
-            // 1. Atualiza UI localmente se a foto pertencer à aba atual
             if (lastAction.origin === getActiveFolderId()) {
                 totalPhotosInFolder++;
                 updateCounterDisplay();
@@ -684,17 +787,13 @@
                 }
 
                 updateCardsVisibility();
-
-                // 1. Força o navegador a recalcular a tela (reflow crucial para a animação funcionar)
                 void card.offsetWidth;
             
-                // 2. Aplica a transição
                 card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
                 card.style.transform = 'translateY(0) scale(1)';
                 card.style.opacity = '1';
-            } // <- O erro estava aqui. Agora tem apenas a chave fechando o bloco do 'if'.
+            } 
 
-            // 2. DISPARA O DESFAZER PARA O GOOGLE DRIVE
             gapi.client.drive.files.update({
                 fileId: lastAction.fileId, 
                 addParents: lastAction.origin, 
@@ -728,20 +827,16 @@
             const rejectFolderId = FOLDERS[1];
             let pageToken = null;
             const query = `'${rejectFolderId}' in parents and trashed = false`;
-            
             const trashBtn = document.getElementById('tab-trash');
             const originalText = trashBtn.innerHTML;
-            
-            let deletedCount = 0; // Inicializa o contador de arquivos
+            let deletedCount = 0; 
             
             try {
-                // Muda o ícone para indicar que está processando
                 trashBtn.innerHTML = "⏳";
                 trashBtn.disabled = true;
                 trashBtn.style.opacity = "0.5";
 
                 do {
-                    // Busca os arquivos na pasta Reject
                     const response = await gapi.client.drive.files.list({
                         q: query,
                         fields: 'nextPageToken, files(id)',
@@ -750,22 +845,18 @@
                     
                     const files = response.result.files;
                     if (files && files.length > 0) {
-                        deletedCount += files.length; // Soma a quantidade de arquivos deste lote
-
-                        // Envia todos os arquivos da página atual para a lixeira
+                        deletedCount += files.length; 
                         const deletePromises = files.map(file => 
                             gapi.client.drive.files.update({
                                 fileId: file.id,
                                 resource: { trashed: true }                            
                             })
                         );
-                        // Aguarda terminar esse lote antes de ir para a próxima página
                         await Promise.all(deletePromises);
                     }
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
 
-                // Exibe a mensagem final com a contagem exata
                 if (deletedCount > 0) {
                     alert(`${deletedCount} arquivo(s) enviado(s) para a lixeira com sucesso.`);
                 } else {
@@ -776,12 +867,75 @@
                 console.error("Erro ao esvaziar a pasta Reject:", e);
                 alert("Ocorreu um erro ao tentar esvaziar a pasta.");
             } finally {
-                // Restaura o botão da lixeira ao estado normal
                 trashBtn.innerHTML = originalText;
                 trashBtn.disabled = false;
                 trashBtn.style.opacity = "1";
             }
         }
-    </script>
-</body>
-</html>
+
+        function openCuradoriaModal() {
+            document.getElementById('confirm-checkbox').checked = false;
+            toggleConfirmButton();
+            document.getElementById('curadoria-modal').style.display = 'flex';
+        }
+
+        function closeCuradoriaModal() {
+            document.getElementById('curadoria-modal').style.display = 'none';
+        }
+
+        function toggleConfirmButton() {
+            const isChecked = document.getElementById('confirm-checkbox').checked;
+            const btnConfirm = document.getElementById('btn-confirm-delete');
+            
+            if (isChecked) {
+                btnConfirm.disabled = false;
+                btnConfirm.classList.add('enabled');
+            } else {
+                btnConfirm.disabled = true;
+                btnConfirm.classList.remove('enabled');
+            }
+        }
+
+        async function executeEmptyCuradoria() {
+            closeCuradoriaModal(); 
+            
+            const curadoriaFolderId = FOLDERS['source'];
+            let pageToken = null;
+            const query = `'${curadoriaFolderId}' in parents and trashed = false`;
+            
+            const btn = document.getElementById('btn-empty-curadoria');
+            const originalText = btn.innerHTML;
+            
+            let deletedCount = 0; 
+            
+            try {
+                btn.innerHTML = "⏳ APAGANDO...";
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+
+                do {
+                    const response = await gapi.client.drive.files.list({
+                        q: query,
+                        fields: 'nextPageToken, files(id)',
+                        pageToken: pageToken,
+                        pageSize: 100 
+                    });
+                    
+                    const files = response.result.files;
+                    if (files && files.length > 0) {
+                        deletedCount += files.length; 
+
+                        const deletePromises = files.map(file => 
+                            gapi.client.drive.files.update({
+                                fileId: file.id,
+                                resource: { trashed: true }                            
+                            })
+                        );
+                        await Promise.all(deletePromises);
+                    }
+                    pageToken = response.result.nextPageToken;
+                } while (pageToken);
+
+                if (deletedCount > 0) {
+                    alert(`${deletedCount} arquivo(s) da Curadoria enviado(s) para a lixeira do Drive com sucesso.`);
+                    if (activeFolderKey === 'source') {
