@@ -181,7 +181,7 @@
         .nav-zone:active { color: rgba(255,255,255,1); background: rgba(255,255,255,0.1); }
 
         /* ---------------------------------------------------
-           BOTÃO ZONA DE PERIGO (Longe dos controles)
+           BOTÃO REORDER (ZONA DE AÇÃO)
            --------------------------------------------------- */
         #danger-zone {
             display: none; 
@@ -192,10 +192,10 @@
             z-index: 1000;
         }
 
-        #btn-empty-curadoria {
-            background: rgba(220, 53, 69, 0.05);
-            border: 1px solid rgba(220, 53, 69, 0.3);
-            color: rgba(220, 53, 69, 0.8);
+        #btn-reorder {
+            background: rgba(13, 110, 253, 0.05);
+            border: 1px solid rgba(13, 110, 253, 0.3);
+            color: rgba(13, 110, 253, 0.8);
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 0.65rem;
@@ -206,10 +206,10 @@
             transition: all 0.2s ease;
         }
 
-        #btn-empty-curadoria:hover {
-            background: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
-            border-color: #dc3545;
+        #btn-reorder:hover {
+            background: rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border-color: #0d6efd;
         }
 
         /* ---------------------------------------------------
@@ -239,8 +239,9 @@
             font-family: sans-serif;
         }
 
-        .modal-content h3 { color: #dc3545; margin-top: 0; font-size: 1.2rem;}
-        .modal-content p { color: #ccc; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
+        .modal-content.reorder-theme { border-color: #0d6efd; box-shadow: 0 10px 40px rgba(13, 110, 253, 0.2); }
+        .modal-content.reorder-theme h3 { color: #0d6efd; }
+        .btn-confirm.reorder-btn { background: #0d6efd; opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(13, 110, 253, 0.4); }
         
         .checkbox-container {
             display: flex; align-items: flex-start; gap: 10px;
@@ -334,13 +335,13 @@
     <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
 
     <div id="folder-nav">
-        <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject">🗑️</button>
+        <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject (Atalho: G ou 3)">🗑️</button>
         
-        <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">Origem</button>
-        <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">Manter</button>
-        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">Top</button>
+        <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source" title="Atalho: 7">Origem</button>
+        <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter" title="Atalho: 8">Manter</button>
+        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top" title="Atalho: 9">Top</button>
 
-        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()">🔤 A-Z</button>
+        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" title="Atalho: +">🔤 A-Z</button>
     </div>
     
     <div id="info-bar">
@@ -348,8 +349,8 @@
     </div>
 
     <div id="catalog-container">
-        <div id="nav-left" class="nav-zone" onclick="prevPhoto()">&#10094;</div>
-        <div id="nav-right" class="nav-zone" onclick="nextPhoto()">&#10095;</div>
+        <div id="nav-left" class="nav-zone" onclick="prevPhoto()" title="Atalho: Seta Esquerda">&#10094;</div>
+        <div id="nav-right" class="nav-zone" onclick="nextPhoto()" title="Atalho: Seta Direita">&#10095;</div>
 
         <div id="end-screen">
             <div id="empty-message">A pasta está vazia!</div>
@@ -357,48 +358,43 @@
     </div>
 
     <div id="danger-zone">
-        <button id="btn-empty-curadoria" onclick="openCuradoriaModal()">Esvaziar Curadoria</button>
+        <button id="btn-reorder" onclick="openReorderModal()">REORDER (50)</button>
+    </div>
+
+    <div id="reorder-modal" class="modal-overlay">
+        <div class="modal-content reorder-theme">
+            <h3>🔄 TRANSFERIR FOTOS 🔄</h3>
+            <p>Você vai mover <b>50 arquivos</b> da <i>Pasta (1)</i> direto para a <i>Curadoria</i>.</p>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeReorderModal()">CANCELAR</button>
+                <button id="btn-confirm-reorder" class="btn-confirm reorder-btn" onclick="executeReorder()">MOVER AGORA</button>
+            </div>
+        </div>
     </div>
 
     <div id="bottom-area">
         <div id="controls-wrapper">
             <div class="left-panel">
-                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()">↩ VOLTAR</button>
-                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 SINCRONIZAR</button>
+                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ VOLTAR</button>
+                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 SINCRONIZAR</button>
             </div>
             
             <div class="right-panel">
-                <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)">
+                <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)" title="Atalho: S ou 4">
                     <span class="icon">🏴</span> REJECT
                 </button>
-                <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)">
+                <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)" title="Atalho: D ou 5">
                     <span class="icon">📁</span> MANTER
                 </button>
-                <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)">
+                <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)" title="Atalho: F ou 6">
                     <span class="icon">🏳️</span> TOP
                 </button>
             </div>
         </div>
 
         <div id="hide-strip">
-            <button id="hide-btn" onclick="toggleVisibility()">OCULTAR TELA</button>
-        </div>
-    </div>
-
-    <div id="curadoria-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>⚠️ ATENÇÃO EXTREMA ⚠️</h3>
-            <p>Você está prestes a enviar <b>TODOS</b> os arquivos da pasta <b>Curadoria (Origem)</b> para a Lixeira do seu Google Drive.</p>
-            
-            <label class="checkbox-container">
-                <input type="checkbox" id="confirm-checkbox" onchange="toggleConfirmButton()">
-                Eu entendo que esta ação apagará as fotos em lote e não poderá ser desfeita por aqui.
-            </label>
-            
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeCuradoriaModal()">CANCELAR</button>
-                <button id="btn-confirm-delete" class="btn-confirm" onclick="executeEmptyCuradoria()" disabled>EXCLUIR TUDO</button>
-            </div>
+            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">OCULTAR TELA</button>
         </div>
     </div>
 
@@ -430,7 +426,7 @@
 
         // ----- VARIÁVEIS PARA CONTROLE DE INATIVIDADE -----
         let inactivityTimer = null;
-        const INACTIVITY_DELAY = 10000; // Alterado para 10 segundos
+        const INACTIVITY_DELAY = 10000; // 10 segundos
 
         function gapiLoaded() { 
             gapi.load('client', () => {
@@ -484,7 +480,7 @@
             if (container) {
                 isScreenHidden = true;
                 container.style.opacity = '0.01';
-                if (hideBtn) hideBtn.innerText = 'ATIVAR TELA'; // Muda o texto do botão
+                if (hideBtn) hideBtn.innerText = 'ATIVAR TELA';
             }
         }
 
@@ -494,7 +490,7 @@
             if (container) {
                 isScreenHidden = false;
                 container.style.opacity = '1';
-                if (hideBtn) hideBtn.innerText = 'OCULTAR TELA'; // Muda o texto do botão
+                if (hideBtn) hideBtn.innerText = 'OCULTAR TELA';
             }
         }
 
@@ -522,14 +518,11 @@
             }
         }
 
-        // Adiciona os ouvintes de evento de forma passiva. 
-        // Eles agora servem apenas para adiar o timer enquanto a tela estiver ativa.
         window.addEventListener('DOMContentLoaded', () => {
             ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
                 document.addEventListener(evt, resetInactivityTimer, { passive: true });
             });
         });
-        // -------------------------------------------------------------
 
         function switchFolder(folderKey) {
             if (activeFolderKey === folderKey) return; 
@@ -627,7 +620,7 @@
                 case 'g': case 'G': case '3': emptyRejectFolder(); break; 
                 case '7': switchFolder('source'); break; 
                 case '8': switchFolder('manter'); break; 
-                case '9': switchFolder('top'); break;    
+                case '9': switchFolder('top'); break;  
                 case '+': toggleSortOrder(); break; 
                 case '0': toggleVisibility(); break; 
             }
@@ -900,46 +893,33 @@
             }
         }
 
-        function openCuradoriaModal() {
-            document.getElementById('confirm-checkbox').checked = false;
-            toggleConfirmButton();
-            document.getElementById('curadoria-modal').style.display = 'flex';
+        function openReorderModal() {
+            document.getElementById('reorder-modal').style.display = 'flex';
         }
 
-        function closeCuradoriaModal() {
-            document.getElementById('curadoria-modal').style.display = 'none';
+        function closeReorderModal() {
+            document.getElementById('reorder-modal').style.display = 'none';
         }
 
-        function toggleConfirmButton() {
-            const isChecked = document.getElementById('confirm-checkbox').checked;
-            const btnConfirm = document.getElementById('btn-confirm-delete');
+        async function executeReorder() {
+            closeReorderModal(); 
             
-            if (isChecked) {
-                btnConfirm.disabled = false;
-                btnConfirm.classList.add('enabled');
-            } else {
-                btnConfirm.disabled = true;
-                btnConfirm.classList.remove('enabled');
-            }
-        }
-
-        async function executeEmptyCuradoria() {
-            closeCuradoriaModal(); 
+            const sourceFolderId = '19UxvEpWqcM931B0AKbjy1NT1Y_vqO0p6'; // Pasta (1)
+            const destFolderId = FOLDERS['source']; // _CURADORIA
+            const limit = 50; // Atualizado para mover 50 por vez
             
-            const curadoriaFolderId = FOLDERS['source'];
-            let pageToken = null;
-            const query = `'${curadoriaFolderId}' in parents and trashed = false`;
-            
-            const btn = document.getElementById('btn-empty-curadoria');
+            const btn = document.getElementById('btn-reorder');
             const originalText = btn.innerHTML;
-            
-            let deletedCount = 0; 
+            let pageToken = null;
+            const query = `'${sourceFolderId}' in parents and mimeType contains 'image/' and trashed = false`;
+            let filesToMove = [];
             
             try {
-                btn.innerHTML = "⏳ APAGANDO...";
+                btn.innerHTML = "⏳ BUSCANDO...";
                 btn.disabled = true;
                 btn.style.opacity = "0.5";
 
+                // 1. Busca até 50 arquivos na Pasta (1)
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query,
@@ -950,31 +930,48 @@
                     
                     const files = response.result.files;
                     if (files && files.length > 0) {
-                        deletedCount += files.length; 
-
-                        const deletePromises = files.map(file => 
-                            gapi.client.drive.files.update({
-                                fileId: file.id,
-                                resource: { trashed: true }                            
-                            })
-                        );
-                        await Promise.all(deletePromises);
+                        for (let file of files) {
+                            if (filesToMove.length < limit) {
+                                filesToMove.push(file);
+                            }
+                        }
                     }
                     pageToken = response.result.nextPageToken;
-                } while (pageToken);
+                } while (pageToken && filesToMove.length < limit);
 
-                if (deletedCount > 0) {
-                    alert(`${deletedCount} arquivo(s) da Curadoria enviado(s) para a lixeira do Drive com sucesso.`);
-                    if (activeFolderKey === 'source') {
-                        reloadFolder(); 
-                    }
-                } else {
-                    alert("A pasta Curadoria já estava vazia.");
+                if (filesToMove.length === 0) {
+                    alert("A Pasta (1) está vazia! Nenhuma foto para mover.");
+                    return;
+                }
+
+                // 2. Processamento em lotes menores para evitar bloqueios de API (Chunking)
+                const chunkSize = 25; // Envia lotes de 25 arquivos por requisição
+                for (let i = 0; i < filesToMove.length; i += chunkSize) {
+                    const chunk = filesToMove.slice(i, i + chunkSize);
+                    
+                    const movePromises = chunk.map(file => 
+                        gapi.client.drive.files.update({
+                            fileId: file.id,
+                            addParents: destFolderId,
+                            removeParents: sourceFolderId,
+                            fields: 'id'
+                        })
+                    );
+                    
+                    btn.innerHTML = `⏳ MOVENDO ${Math.min(i + chunkSize, filesToMove.length)} / ${filesToMove.length}...`;
+                    await Promise.all(movePromises); // Espera o lote atual terminar para passar pro próximo
+                }
+
+                alert(`${filesToMove.length} arquivo(s) transferido(s) para a Curadoria com sucesso!`);
+                
+                // Atualiza a tela de Origem
+                if (activeFolderKey === 'source') {
+                    reloadFolder(); 
                 }
 
             } catch (e) {
-                console.error("Erro ao esvaziar a pasta Curadoria:", e);
-                alert("Ocorreu um erro ao tentar esvaziar a pasta da Origem.");
+                console.error("Erro ao transferir arquivos:", e);
+                alert("Ocorreu um erro na transferência entre as pastas.");
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
