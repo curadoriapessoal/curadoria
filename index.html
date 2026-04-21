@@ -885,6 +885,7 @@
                 trashBtn.disabled = true;
                 trashBtn.style.opacity = "0.5";
 
+                // 1. Move os arquivos da pasta Reject para a lixeira
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query,
@@ -906,15 +907,19 @@
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
 
+                // 2. Esvazia a lixeira global do Google Drive permanentemente
+                trashBtn.innerHTML = "🔥"; 
+                await gapi.client.drive.files.emptyTrash({});
+
                 if (deletedCount > 0) {
-                    alert(`${deletedCount} arquivo(s) enviado(s) para a lixeira com sucesso.`);
+                    alert(`${deletedCount} arquivo(s) rejeitado(s). A Lixeira do Google Drive foi completamente esvaziada.`);
                 } else {
-                    alert("A pasta Reject já estava vazia.");
+                    alert("A pasta Reject já estava vazia. A Lixeira do Google Drive foi esvaziada com sucesso.");
                 }
 
             } catch (e) {
-                console.error("Erro ao esvaziar a pasta Reject:", e);
-                alert("Ocorreu um erro ao tentar esvaziar a pasta.");
+                console.error("Erro ao esvaziar a pasta Reject ou a Lixeira:", e);
+                alert("Ocorreu um erro ao tentar limpar os arquivos.");
             } finally {
                 trashBtn.innerHTML = originalText;
                 trashBtn.disabled = false;
