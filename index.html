@@ -399,6 +399,17 @@
             </div>
         </div>
     </div>
+    <div id="install-modal" class="modal-overlay">
+        <div class="modal-content reorder-theme" style="border-color: #28a745; box-shadow: 0 10px 40px rgba(40, 167, 69, 0.2);">
+            <h3 style="color: #28a745;">📱 INSTALAR APP 📱</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 20px;">Instale o Editing Pro no seu dispositivo para acesso rápido e em tela cheia.</p>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeInstallModal()">AGORA NÃO</button>
+                <button class="btn-confirm enabled" style="background: #28a745; box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);" onclick="triggerInstall()">INSTALAR</button>
+            </div>
+        </div>
+    </div>
 
     <div id="bottom-area">
         <div id="controls-wrapper">
@@ -417,16 +428,11 @@
                 <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)" title="Atalho: F ou 6">
                     <span class="icon">🏳️</span> TOP
                 </button>
-                
             </div>
         </div>
-        
 
         <div id="hide-strip">
             <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">OCULTAR TELA</button>
-            <button id="install-btn" class="solid-btn" style="display: none; background: #0d6efd; border-color: #0d6efd; margin: 0 auto 15px auto; padding: 10px 25px; border-radius: 25px;">
-    ⬇️ INSTALAR APP
-</button>
         </div>
     </div>
 
@@ -1022,40 +1028,46 @@
                 btn.style.opacity = "1";
             }
         }
-        // ---------- LÓGICA DO BOTÃO DE INSTALAÇÃO (PWA) ----------
-let deferredPrompt;
-const installBtn = document.getElementById('install-btn');
+        // ---------- LÓGICA DE INSTALAÇÃO VIA POPUP (PWA) ----------
+        let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Impede que o mini-info bar do navegador apareça automaticamente no mobile
-    e.preventDefault();
-    // Guarda o evento para acioná-lo depois
-    deferredPrompt = e;
-    // Mostra o nosso botão customizado
-    installBtn.style.display = 'block';
-});
+        // Ouve o evento do navegador dizendo que o PWA pode ser instalado
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Impede o Chrome de mostrar aquele mini-aviso padrão
+            e.preventDefault();
+            // Guarda o evento para usarmos no botão
+            deferredPrompt = e;
+            
+            // Exibe o nosso modal personalizado automaticamente
+            document.getElementById('install-modal').style.display = 'flex';
+        });
 
-installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        // Mostra o prompt de instalação nativo
-        deferredPrompt.prompt();
-        // Aguarda a resposta do usuário
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            console.log('App instalado com sucesso!');
+        function closeInstallModal() {
+            document.getElementById('install-modal').style.display = 'none';
         }
-        // Limpa o prompt, pois ele só pode ser usado uma vez
-        deferredPrompt = null;
-        // Esconde o botão novamente
-        installBtn.style.display = 'none';
-    }
-});
 
-// Esconde o botão se o app já estiver instalado e rodando como standalone
-window.addEventListener('appinstalled', () => {
-    installBtn.style.display = 'none';
-    deferredPrompt = null;
-});
+        async function triggerInstall() {
+            if (deferredPrompt) {
+                // Dispara a janela de instalação nativa do Android/iOS/Windows
+                deferredPrompt.prompt();
+                
+                // Espera a resposta do usuário
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('App instalado pelo usuário!');
+                }
+                
+                // Limpa a variável e fecha o nosso modal
+                deferredPrompt = null;
+                closeInstallModal();
+            }
+        }
+
+        // Se o app for instalado com sucesso, garante que o modal suma
+        window.addEventListener('appinstalled', () => {
+            closeInstallModal();
+            deferredPrompt = null;
+        });
 
         // ---------- REGISTRO DO SERVICE WORKER (PWA) ----------
         if ('serviceWorker' in navigator) {
