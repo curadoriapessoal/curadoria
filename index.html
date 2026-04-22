@@ -4,6 +4,11 @@
     <title>Editing Pro</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     
@@ -22,6 +27,26 @@
             flex-direction: column;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             padding-top: 2vh; 
+        }
+        
+        /* ---------------------------------------------------
+           NOME DO ARQUIVO
+           --------------------------------------------------- */
+        #filename-display {
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem; 
+            font-weight: 300; /* Fonte light */
+            color: #777;      /* Cor discreta */
+            margin-top: 2px;
+            min-height: 1rem; /* Evita que a interface pule quando estiver vazio */
+            z-index: 1000;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adiciona "..." se o nome for muito longo */
+            padding: 0 10px;
+            box-sizing: border-box;
         }
 
         #auth_button { 
@@ -345,8 +370,10 @@
     </div>
     
     <div id="info-bar">
-        <div id="photo-count">...</div>
+   <div id="photo-count">...</div>
     </div>
+
+    <div id="filename-display"></div>
 
     <div id="catalog-container">
         <div id="nav-left" class="nav-zone" onclick="prevPhoto()" title="Atalho: Seta Esquerda">&#10094;</div>
@@ -547,7 +574,8 @@
             actionHistory = []; 
             updateUndoButtonState();
             
-            document.getElementById('end-screen').style.display = 'none'; 
+            document.getElementById('end-screen').style.display = 'none';
+            document.getElementById('filename-display').innerText = '';
             fetchTotalCount();
             listPhotos();
         }
@@ -575,10 +603,15 @@
             if (currentViewIndex >= cards.length) currentViewIndex = Math.max(0, cards.length - 1);
             if (currentViewIndex < 0) currentViewIndex = 0;
 
-            cards.forEach((card, index) => {
+           cards.forEach((card, index) => {
                 if (index === currentViewIndex) {
                     card.style.visibility = 'visible';
                     card.style.opacity = '1';
+                    
+                    // Atualiza o display com o nome do arquivo do card ativo
+                    const nameDisplay = document.getElementById('filename-display');
+                    if (nameDisplay) nameDisplay.innerText = card.dataset.fileName;
+                    
                 } else {
                     card.style.visibility = 'hidden';
                     card.style.opacity = '0';
@@ -682,7 +715,7 @@
             const query = `'${currentId}' in parents and mimeType contains 'image/' and trashed = false`;
             const requestParams = {
                 'pageSize': 100, 
-                'fields': 'nextPageToken, files(id, thumbnailLink, parents)', 
+                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents)', // 'name' adicionado aqui
                 'q': query,
                 'orderBy': currentSortOrder 
             };
@@ -712,7 +745,7 @@
                 processedIds.add(file.id);
                 addedCount++;
 
-                const card = createCardElement(file.id, file.thumbnailLink.replace('=s220', '=s800'));
+                const card = createCardElement(file.id, file.thumbnailLink.replace('=s220', '=s800'), file.name);                
                 container.appendChild(card);
             });
 
@@ -724,10 +757,11 @@
             }
         }
 
-        function createCardElement(fileId, imgUrl) {
+        function createCardElement(fileId, imgUrl, fileName) {
             const card = document.createElement('div');
             card.className = 'card';
             card.dataset.fileId = fileId; 
+            card.dataset.fileName = fileName || 'Desconhecido'; // Armazena o nome
             card.innerHTML = `<img src="${imgUrl}">`;
             return card;
         }
@@ -856,6 +890,7 @@
                 trashBtn.disabled = true;
                 trashBtn.style.opacity = "0.5";
 
+                // 1. Move os arquivos da pasta Reject para a lixeira
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query,
@@ -877,15 +912,19 @@
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
 
+                // 2. Esvazia a lixeira global do Google Drive permanentemente
+                trashBtn.innerHTML = "🔥"; 
+                await gapi.client.drive.files.emptyTrash({});
+
                 if (deletedCount > 0) {
-                    alert(`${deletedCount} arquivo(s) enviado(s) para a lixeira com sucesso.`);
+                    alert(`${deletedCount} arquivo(s) rejeitado(s). A Lixeira do Google Drive foi completamente esvaziada.`);
                 } else {
-                    alert("A pasta Reject já estava vazia.");
+                    alert("A pasta Reject já estava vazia. A Lixeira do Google Drive foi esvaziada com sucesso.");
                 }
 
             } catch (e) {
-                console.error("Erro ao esvaziar a pasta Reject:", e);
-                alert("Ocorreu um erro ao tentar esvaziar a pasta.");
+                console.error("Erro ao esvaziar a pasta Reject ou a Lixeira:", e);
+                alert("Ocorreu um erro ao tentar limpar os arquivos.");
             } finally {
                 trashBtn.innerHTML = originalText;
                 trashBtn.disabled = false;
@@ -977,6 +1016,17 @@
                 btn.disabled = false;
                 btn.style.opacity = "1";
             }
+        }
+
+        // ---------- REGISTRO DO SERVICE WORKER (PWA) ----------
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(registration => {
+                    console.log('ServiceWorker registrado com sucesso! Escopo:', registration.scope);
+                }).catch(error => {
+                    console.log('Falha no registro do ServiceWorker:', error);
+                });
+            });
         }
     </script>
 </body>
