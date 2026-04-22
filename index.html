@@ -1022,6 +1022,40 @@
                 btn.style.opacity = "1";
             }
         }
+        // ---------- LÓGICA DO BOTÃO DE INSTALAÇÃO (PWA) ----------
+let deferredPrompt;
+const installBtn = document.getElementById('install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Impede que o mini-info bar do navegador apareça automaticamente no mobile
+    e.preventDefault();
+    // Guarda o evento para acioná-lo depois
+    deferredPrompt = e;
+    // Mostra o nosso botão customizado
+    installBtn.style.display = 'block';
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        // Mostra o prompt de instalação nativo
+        deferredPrompt.prompt();
+        // Aguarda a resposta do usuário
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('App instalado com sucesso!');
+        }
+        // Limpa o prompt, pois ele só pode ser usado uma vez
+        deferredPrompt = null;
+        // Esconde o botão novamente
+        installBtn.style.display = 'none';
+    }
+});
+
+// Esconde o botão se o app já estiver instalado e rodando como standalone
+window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+});
 
         // ---------- REGISTRO DO SERVICE WORKER (PWA) ----------
         if ('serviceWorker' in navigator) {
