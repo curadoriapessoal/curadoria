@@ -207,21 +207,16 @@
         /* ---------------------------------------------------
            BOTÃO REORDER (ZONA DE AÇÃO) E MODAIS DE CONFIRMAÇÃO
            --------------------------------------------------- */
+        
+        /* O Wrapper do Reorder agora vive dentro do painel da esquerda! */
         #danger-zone {
-            display: none; 
-            position: absolute;
-            bottom: 22vh; 
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
+            display: none; /* Inicialmente oculto, controlado ativamente pelo JavaScript */
         }
+        /* O estilo visual do botão Reorder foi mantido */
         #btn-reorder {
-            background: rgba(13, 110, 253, 0.05); border: 1px solid rgba(13, 110, 253, 0.3);
-            color: rgba(13, 110, 253, 0.8); padding: 6px 14px; border-radius: 20px;
-            font-size: 0.65rem; font-weight: bold; cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: all 0.2s ease;
+            border-color: rgba(13, 110, 253, 0.2); 
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1);
         }
-        #btn-reorder:hover { background: rgba(13, 110, 253, 0.2); color: #0d6efd; border-color: #0d6efd; }
 
         /* Fundo desfocado dos avisos (Popups) */
         .modal-overlay {
@@ -257,10 +252,20 @@
 
         #controls-wrapper {
             display: none; justify-content: space-between; align-items: flex-end; padding: 0 10px; pointer-events: none;
+            position: relative; /* Permite posicionar o VOLTAR absolutamente dentro dele */
         }
 
         .left-panel { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
         .right-panel { display: flex; flex-direction: row; gap: 10px; pointer-events: auto; }
+
+        /* Posicionamento independente do botão VOLTAR acima da aba direita */
+        #undo-zone {
+            position: absolute;
+            right: 10px; /* Alinhado com o padding-right do controls-wrapper */
+            bottom: 116px; /* Fica acima do botão TOP (104px altura + 12px gap no desktop) */
+            z-index: 1000;
+            pointer-events: auto;
+        }
 
         /* Classes auxiliares para textos dos botões (Serão ocultos no mobile) */
         .btn-text { display: inline; }
@@ -277,6 +282,8 @@
         .solid-btn:active { transform: scale(0.96) translateY(2px); }
 
         .btn-left-stack { width: 130px; height: 46px; border-radius: 12px; font-size: 0.8rem; letter-spacing: 0.5px; }
+        
+        #undo_button { width: 65px; height: 46px; border-radius: 12px; font-size: 1.2rem; padding: 0; }
         .btn-undo { border-color: rgba(255, 193, 7, 0.2); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1); visibility: hidden; }
         .btn-sync { border-color: rgba(232, 62, 140, 0.2); box-shadow: 0 4px 15px rgba(232, 62, 140, 0.1); }
 
@@ -307,7 +314,7 @@
             .btn-text { display: none !important; }
 
             /* Força formato quadrado para botões inferiores (Sync, Voltar, Ações, Reorder, Olho) */
-            .btn-left-stack, .btn-right-action, #hide-btn, #btn-reorder {
+            .btn-left-stack, .btn-right-action, #hide-btn, #btn-reorder, #undo_button {
                 width: 60px !important;
                 height: 60px !important;
                 border-radius: 16px;
@@ -317,6 +324,11 @@
                 justify-content: center;
                 font-size: 1.6rem !important; /* Ícones maiores para compensar a falta de texto */
                 flex-direction: row !important; /* Desativa a coluna (column) das ações da direita */
+            }
+
+            /* No Mobile Retrato, o bloco do Voltar desce porque as ações da direita encolheram para 60px */
+            #undo-zone {
+                bottom: 72px; /* 60px (altura do botão Top mobile) + 12px de margem (gap) */
             }
 
             /* Reseta a margem dos ícones internos */
@@ -355,9 +367,9 @@
             /* ÁREA DA IMAGEM: Centro livre, 96% de altura (2% de topo e base respiro) */
             #catalog-container {
                 width: 40vw; 
-                height: 90vh; 
-                margin-top: 1vh; 
-                margin-bottom: 3vh;
+                height: 96vh; 
+                margin-top: 2vh; 
+                margin-bottom: 2vh;
                 margin-left: auto; margin-right: auto;
             }
 
@@ -429,23 +441,22 @@
             }
 
             /* REORDER (ZONA DE PERIGO): Acima do grupo de ações (Top), alinhado à extrema direita */
-            #danger-zone {
+            /* IMPORTANTE: Como o Reorder agora mora dentro da .left-panel, movemos a panel inteira! */
+            .left-panel {
                 position: fixed;
                 right: 5%;
                 bottom: calc(5% + 144px); /* Pula Olho e Top (60+12 + 60+12) */
                 left: auto;
-                transform: none;
+                flex-direction: column;
                 z-index: 1000;
-                display: flex;
             }
 
             /* BOTÃO VOLTAR (UNDO): Removido da esquerda para morar exatamente à esquerda do Reorder, acima do Manter */
-            .left-panel {
+            #undo-zone {
                 position: fixed;
-                left: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) do Reorder */
+                right: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) da left-panel (Reorder) */
                 bottom: calc(5% + 144px); /* Mesma altura (linha) do Reorder */
-                right: auto;
-                flex-direction: column;
+                left: auto;
                 z-index: 1000;
             }
         }
@@ -484,10 +495,6 @@
         </div>
     </div>
 
-    <div id="danger-zone">
-        <button id="btn-reorder" onclick="openReorderModal()">🔀 <span class="btn-text">REORDER (50)</span></button>
-    </div>
-
     <div id="reorder-modal" class="modal-overlay">
         <div class="modal-content reorder-theme">
             <h3>🔄 TRANSFERIR FOTOS 🔄</h3>
@@ -514,8 +521,12 @@
 
     <div id="bottom-area">
         <div id="controls-wrapper">
+            
             <div class="left-panel">
-                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ <span class="btn-text">VOLTAR</span></button>
+                <div id="danger-zone">
+                    <button id="btn-reorder" class="solid-btn btn-left-stack" onclick="openReorderModal()">🔀 <span class="btn-text">REORDER</span></button>
+                </div>
+                
                 <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">SINCRONIZAR</span></button>
             </div>
             
@@ -529,6 +540,10 @@
                 <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)" title="Atalho: F ou 6">
                     <span class="icon">🏳️</span> <span class="btn-text">TOP</span>
                 </button>
+            </div>
+            
+            <div id="undo-zone">
+                <button id="undo_button" class="solid-btn btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ <span class="btn-text">VOLTAR</span></button>
             </div>
         </div>
 
