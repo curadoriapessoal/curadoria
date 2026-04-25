@@ -260,6 +260,9 @@
         .left-panel { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
         .right-panel { display: flex; flex-direction: row; gap: 10px; pointer-events: auto; }
 
+        /* Classes auxiliares para textos dos botões (Serão ocultos no landscape) */
+        .btn-text { display: inline; }
+
         /* Estilo base com efeito 'Glassmorphism' dos botões de ação */
         .solid-btn {
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -295,107 +298,123 @@
 
         /* ===================================================
            MODO RESPONSIVO: LANDSCAPE (CELULAR DEITADO)
-           Aqui a mágica acontece. Se o celular deitar, o CSS reescreve a posição de tudo!
+           Aqui a mágica geométrica acontece. Transformamos em ícones
+           e encostamos nas margens laterais com 5% de respiro.
            =================================================== */
         @media screen and (max-width: 950px) and (orientation: landscape),
                screen and (max-height: 600px) and (orientation: landscape) {
             
             body { padding-top: 0; }
 
-            /* Exibe os botões de D-Pad/Sync exclusivos para landscape */
+            /* Oculta textos dos botões principais para criar ícones quadrados perfeitos */
+            .btn-text { display: none !important; }
+
+            /* Exibe os botões de controle de imagem exclusivos para landscape */
             .landscape-only { display: block; }
 
-            /* TEXTOS SUPERIORES ESQUERDOS: Ancorados à esquerda, respeitando notch de câmera */
+            /* TEXTOS SUPERIORES ESQUERDOS: Ancorados à esquerda, liberam a foto */
             #info-bar { 
-                position: fixed; top: 20px; left: max(env(safe-area-inset-left), 35px); 
+                position: fixed; top: 15px; left: 5%; 
                 transform: none; width: auto; z-index: 1002; justify-content: flex-start;
             }
             #filename-display { 
-                position: fixed; top: 45px; left: max(env(safe-area-inset-left), 35px); 
+                position: fixed; top: 40px; left: 5%; 
                 transform: none; width: 30vw; z-index: 1002; text-align: left; padding: 0;
             }
 
-            /* ÁREA DA IMAGEM: Centro livre ocupando 90% da altura da tela horizontal */
+            /* ÁREA DA IMAGEM: Centro livre, 85% de altura, caindo 10vh pra fugir dos textos */
             #catalog-container {
-                width: 55vw; height: 90vh; margin-top: 5vh; margin-left: auto; margin-right: auto;
+                width: 55vw; 
+                height: 85vh; 
+                margin-top: 10vh; 
+                margin-left: auto; margin-right: auto;
             }
 
-            /* REMOVE AS ZONAS INVISÍVEIS LATERAIS DE TOQUE na foto para evitar esbarrões */
+            /* REMOVE AS ZONAS INVISÍVEIS LATERAIS DE TOQUE na foto para evitar esbarrões no celular deitado */
             #nav-left, #nav-right { display: none !important; }
 
-            /* LATERAL ESQUERDA: Abas de pasta transformadas numa grade (Grid) de duas colunas */
+            /* LATERAL ESQUERDA: Abas de pasta transformadas numa grade (Grid) de 2 colunas e margem 5% */
             #folder-nav {
                 position: fixed;
                 top: 50%;
-                left: max(env(safe-area-inset-left), 35px); 
+                left: 5%; 
                 transform: translateY(-50%);
                 display: grid !important;
                 grid-template-columns: 1fr 1fr;
-                width: 170px; 
+                width: 140px; /* Mais fino já que são só ícones */
                 background: rgba(0, 0, 0, 0.4);
                 border-radius: 15px;
                 padding: 12px;
-                gap: 10px;
+                gap: 8px;
                 z-index: 1001;
                 margin: 0;
             }
             
-            /* CSS GRID ORDER: Define qual botão fica em qual "quadrado" da grade na esquerda */
-            #tab-trash          { order: 1; width: 100%; } /* Superior Esquerdo */
-            #btn-sort           { order: 2; width: 100%; } /* Superior Direito */
-            #tab-top            { order: 3; width: 100%; } /* Meio Esquerdo */
-            #tab-manter         { order: 4; width: 100%; } /* Meio Direito */
-            #tab-source         { order: 5; width: 100%; } /* Base Esquerdo */
-            .btn-sync-landscape { order: 6; width: 100%; } /* Base Direito */
-            /* Botões controladores de foto (setas) no final do grid */
-            .btn-prev-landscape { order: 7; width: 100%; font-size: 1rem; } 
-            .btn-next-landscape { order: 8; width: 100%; font-size: 1rem; }
+            /* CSS GRID ORDER: Define a matriz exata 4linhas x 2colunas da esquerda */
+            #tab-trash          { order: 1; width: 100%; } /* Lixeira */
+            #btn-sort           { order: 2; width: 100%; } /* A-Z */
+            #tab-top            { order: 3; width: 100%; } /* Top */
+            #tab-manter         { order: 4; width: 100%; } /* Manter */
+            #tab-source         { order: 5; width: 100%; } /* Origem */
+            .btn-sync-landscape { order: 6; width: 100%; } /* Sincronizar */
+            .btn-prev-landscape { order: 7; width: 100%; } /* Seta Esquerda */
+            .btn-next-landscape { order: 8; width: 100%; } /* Seta Direita */
             
-            .folder-tab { text-align: center; padding: 12px 0px; font-size: 0.65rem; margin:0; }
+            /* Como não tem texto, alinha o ícone no meio e engorda o botão */
+            .folder-tab { text-align: center; padding: 15px 0px; font-size: 1.3rem; margin: 0; }
 
-            /* Remove o botão SYNC "antigo" da lista inferior para não duplicar */
+            /* Remove o botão SYNC "antigo" da lista inferior para não duplicar com o do Grid */
             .left-panel .btn-sync { display: none !important; }
 
-            /* BOTÃO VOLTAR: Fica solitário no canto inferior esquerdo */
-            .left-panel {
-                position: fixed;
-                left: max(env(safe-area-inset-left), 35px); 
-                bottom: max(env(safe-area-inset-bottom), 35px); 
-                flex-direction: column;
-                gap: 10px;
-                z-index: 1000;
-            }
-            .btn-left-stack { width: 110px; height: 42px; font-size: 0.7rem; }
-
-            /* BOTÕES DE CLASSIFICAÇÃO (Reject, Manter, Top): Lateral direita, recuados do botão base */
+            /* BOTÕES LADO DIREITO (Reject, Manter, Top): Margem 5%, desceram 5% (agora bottom: 10%) */
             .right-panel {
                 position: fixed;
-                right: max(env(safe-area-inset-right), 35px);
-                bottom: 80px; 
+                right: 5%;
+                bottom: 10%; 
                 flex-direction: row;
                 gap: 12px;
                 z-index: 1000;
             }
-
-            /* OCULTAR TELA: Ancora no extremo canto inferior direito como ponto de acesso rápido */
-            #hide-strip {
-                position: fixed;
-                right: max(env(safe-area-inset-right), 35px);
-                bottom: max(env(safe-area-inset-bottom), 35px);
-                width: auto;
-                z-index: 1000;
-                justify-content: flex-end;
+            
+            /* Reduz botões de ação para ficarem quadrados (só os ícones aparecem) */
+            .btn-right-action {
+                width: 55px !important; 
+                height: 55px !important; 
+                border-radius: 12px;
             }
-            #hide-btn { font-size: 0.75rem; padding: 10px 25px; }
+            .btn-right-action .icon { font-size: 1.6rem; margin: 0; }
 
-            /* REORDER: Acompanha e flutua logo acima do grupo de ações na direita */
+            /* BOTÃO VOLTAR (UNDO): Geometria perfeita. Fica posicionado à esquerda do Reorder, cravado acima do Reject */
+            #undo_button {
+                position: fixed;
+                right: calc(5% + 145px); /* Salta o espaço ocupado pelo botão Reorder */
+                bottom: calc(10% + 70px); /* Mesma altura do Reorder, linha de cima dos botões de ação */
+                width: 55px !important; 
+                height: 55px !important; /* Quadrado */
+                border-radius: 12px;
+                z-index: 1000;
+                font-size: 1.5rem;
+                padding: 0;
+            }
+
+            /* REORDER: Acompanha a descida das ações, ficando na borda direita, linha de cima */
             #danger-zone {
                 position: fixed;
-                right: max(env(safe-area-inset-right), 35px);
-                bottom: 185px; 
+                right: 5%;
+                bottom: calc(10% + 70px); 
                 left: auto;
                 transform: none;
                 z-index: 1000;
+            }
+
+            /* OCULTAR TELA: Ancora no extremo canto inferior direito, base 5% */
+            #hide-strip {
+                position: fixed;
+                right: 5%;
+                bottom: 5%;
+                width: auto;
+                z-index: 1000;
+                justify-content: flex-end;
             }
         }
     </style>
@@ -407,13 +426,13 @@
     <div id="folder-nav">
         <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject (Atalho: G ou 3)">🗑️</button>
         
-        <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source" title="Atalho: 7">Origem</button>
-        <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter" title="Atalho: 8">Manter</button>
-        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top" title="Atalho: 9">Top</button>
+        <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source" title="Atalho: 7">📥 <span class="btn-text">Origem</span></button>
+        <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter" title="Atalho: 8">📁 <span class="btn-text">Manter</span></button>
+        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top" title="Atalho: 9">🏳️ <span class="btn-text">Top</span></button>
 
-        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" title="Atalho: +">🔤 A-Z</button>
+        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" title="Atalho: +">🔤 <span class="btn-text">A-Z</span></button>
 
-        <button class="folder-tab landscape-only btn-sync-landscape" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 SYNC</button>
+        <button class="folder-tab landscape-only btn-sync-landscape" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">SYNC</span></button>
         <button class="folder-tab landscape-only btn-prev-landscape" onclick="prevPhoto()" title="Atalho: Seta Esquerda">⬅️</button>
         <button class="folder-tab landscape-only btn-next-landscape" onclick="nextPhoto()" title="Atalho: Seta Direita">➡️</button>
     </div>
@@ -434,7 +453,7 @@
     </div>
 
     <div id="danger-zone">
-        <button id="btn-reorder" onclick="openReorderModal()">REORDER (50)</button>
+        <button id="btn-reorder" onclick="openReorderModal()">🔄 <span class="btn-text">REORDER (50)</span></button>
     </div>
 
     <div id="reorder-modal" class="modal-overlay">
@@ -464,25 +483,25 @@
     <div id="bottom-area">
         <div id="controls-wrapper">
             <div class="left-panel">
-                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ VOLTAR</button>
-                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 SINCRONIZAR</button>
+                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ <span class="btn-text">VOLTAR</span></button>
+                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">SINCRONIZAR</span></button>
             </div>
             
             <div class="right-panel">
                 <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)" title="Atalho: S ou 4">
-                    <span class="icon">🏴</span> REJECT
+                    <span class="icon">🏴</span> <span class="btn-text">REJECT</span>
                 </button>
                 <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)" title="Atalho: D ou 5">
-                    <span class="icon">📁</span> MANTER
+                    <span class="icon">📁</span> <span class="btn-text">MANTER</span>
                 </button>
                 <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)" title="Atalho: F ou 6">
-                    <span class="icon">🏳️</span> TOP
+                    <span class="icon">🏳️</span> <span class="btn-text">TOP</span>
                 </button>
             </div>
         </div>
 
         <div id="hide-strip">
-            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">OCULTAR TELA</button>
+            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">👁️ <span class="btn-text">OCULTAR TELA</span></button>
         </div>
     </div>
 
@@ -576,20 +595,22 @@
         function hideImageArea() {
             const container = document.getElementById('catalog-container');
             const hideBtn = document.getElementById('hide-btn');
+            const hideBtnText = hideBtn.querySelector('.btn-text');
             if (container) {
                 isScreenHidden = true;
                 container.style.opacity = '0.01'; // Deixa praticamente invisível (protege a tela de burn-in)
-                if (hideBtn) hideBtn.innerText = 'ATIVAR TELA';
+                if (hideBtnText) hideBtnText.innerText = 'ATIVAR TELA';
             }
         }
 
         function showImageArea() {
             const container = document.getElementById('catalog-container');
             const hideBtn = document.getElementById('hide-btn');
+            const hideBtnText = hideBtn.querySelector('.btn-text');
             if (container) {
                 isScreenHidden = false;
                 container.style.opacity = '1';
-                if (hideBtn) hideBtn.innerText = 'OCULTAR TELA';
+                if (hideBtnText) hideBtnText.innerText = 'OCULTAR TELA';
             }
         }
 
@@ -750,15 +771,16 @@
         // Altera o modo como a API do Google joga a lista (Por nome, data ou tamanho)
         function toggleSortOrder() {
             const btn = document.getElementById('btn-sort');
+            const textSpan = btn.querySelector('.btn-text');
             if (currentSortOrder === 'name') {
                 currentSortOrder = 'createdTime desc'; 
-                btn.innerHTML = '📅 TIME';
+                if (textSpan) textSpan.innerHTML = 'TIME';
             } else if (currentSortOrder === 'createdTime desc') {
                 currentSortOrder = 'quotaBytesUsed desc'; 
-                btn.innerHTML = '💾 SIZE';
+                if (textSpan) textSpan.innerHTML = 'SIZE';
             } else {
                 currentSortOrder = 'name'; 
-                btn.innerHTML = '🔤 A-Z';
+                if (textSpan) textSpan.innerHTML = 'A-Z';
             }
             reloadFolder(); 
         }
