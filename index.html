@@ -355,9 +355,9 @@
             /* ÁREA DA IMAGEM: Centro livre, 96% de altura (2% de topo e base respiro) */
             #catalog-container {
                 width: 40vw; 
-                height: 96vh; 
-                margin-top: 2vh; 
-                margin-bottom: 2vh;
+                height: 90vh; 
+                margin-top: 1vh; 
+                margin-bottom: 3vh;
                 margin-left: auto; margin-right: auto;
             }
 
@@ -442,9 +442,9 @@
             /* BOTÃO VOLTAR (UNDO): Removido da esquerda para morar exatamente à esquerda do Reorder, acima do Manter */
             .left-panel {
                 position: fixed;
-                right: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) do Reorder */
+                left: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) do Reorder */
                 bottom: calc(5% + 144px); /* Mesma altura (linha) do Reorder */
-                left: auto;
+                right: auto;
                 flex-direction: column;
                 z-index: 1000;
             }
