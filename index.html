@@ -260,7 +260,7 @@
         .left-panel { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
         .right-panel { display: flex; flex-direction: row; gap: 10px; pointer-events: auto; }
 
-        /* Classes auxiliares para textos dos botões (Serão ocultos no landscape) */
+        /* Classes auxiliares para textos dos botões (Serão ocultos no mobile) */
         .btn-text { display: inline; }
 
         /* Estilo base com efeito 'Glassmorphism' dos botões de ação */
@@ -297,32 +297,60 @@
         .landscape-only { display: none; }
 
         /* ===================================================
+           MODO RESPONSIVO: MOBILE GERAL (Retrato e Paisagem)
+           Esconde os textos, permitindo botões compactos e quadrados
+           =================================================== */
+        @media screen and (max-width: 950px) {
+            /* Oculta todos os textos envoltos em .btn-text */
+            .btn-text { display: none !important; }
+
+            /* Força formato quadrado para botões inferiores (Sync, Voltar, Ações, Reorder, Olho) */
+            .btn-left-stack, .btn-right-action, #hide-btn, #btn-reorder {
+                width: 60px !important;
+                height: 60px !important;
+                border-radius: 16px;
+                padding: 0 !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.6rem !important; /* Ícones maiores para compensar a falta de texto */
+                flex-direction: row !important; /* Desativa a coluna (column) das ações da direita */
+            }
+
+            /* Reseta a margem dos ícones internos */
+            .btn-right-action .icon { font-size: 1.6rem; margin: 0; }
+
+            /* Ajusta abas da pasta do topo/lateral para ficarem mais curtas e com fontes maiores */
+            .folder-tab {
+                font-size: 1.3rem !important;
+                padding: 12px 0 !important;
+                border-radius: 14px;
+            }
+        }
+
+        /* ===================================================
            MODO RESPONSIVO: LANDSCAPE (CELULAR DEITADO)
-           Aqui a mágica geométrica acontece. Transformamos em ícones
-           e encostamos nas margens laterais com 5% de respiro.
+           Usa a lógica do D-Pad na esquerda e libera o centro.
            =================================================== */
         @media screen and (max-width: 950px) and (orientation: landscape),
                screen and (max-height: 600px) and (orientation: landscape) {
             
             body { padding-top: 0; }
 
-            /* Oculta textos dos botões principais para criar ícones quadrados perfeitos */
-            .btn-text { display: none !important; }
-
-            /* Exibe os botões de controle de imagem exclusivos para landscape */
+            /* Exibe as setas de imagem e o botão de Sync exclusivo para o grid lateral */
             .landscape-only { display: block; }
 
-            /* TEXTOS SUPERIORES ESQUERDOS: Ancorados à esquerda, liberam a foto */
+            /* TEXTOS INFORMATIVOS (Contador/Nome): Movidos para a extrema DIREITA (Topo) */
             #info-bar { 
-                position: fixed; top: 15px; left: 5%; 
-                transform: none; width: auto; z-index: 1002; justify-content: flex-start;
+                position: fixed; top: 15px; right: 5%; left: auto;
+                transform: none; width: auto; z-index: 1002; justify-content: flex-end;
             }
             #filename-display { 
-                position: fixed; top: 40px; left: 5%; 
-                transform: none; width: 30vw; z-index: 1002; text-align: left; padding: 0;
+                position: fixed; top: 40px; right: 5%; left: auto;
+                transform: none; width: 40vw; z-index: 1002; text-align: right; padding: 0;
             }
 
-            /* ÁREA DA IMAGEM: Centro livre, 85% de altura, caindo 10vh pra fugir dos textos */
+            /* ÁREA DA IMAGEM: Centro livre, 85% de altura, desce 10vh pra escapar dos textos */
             #catalog-container {
                 width: 55vw; 
                 height: 85vh; 
@@ -333,7 +361,7 @@
             /* REMOVE AS ZONAS INVISÍVEIS LATERAIS DE TOQUE na foto para evitar esbarrões no celular deitado */
             #nav-left, #nav-right { display: none !important; }
 
-            /* LATERAL ESQUERDA: Abas de pasta transformadas numa grade (Grid) de 2 colunas e margem 5% */
+            /* LATERAL ESQUERDA (D-Pad): Abas numa grade de 2 Colunas x 4 Linhas com margem de 5% */
             #folder-nav {
                 position: fixed;
                 top: 50%;
@@ -341,73 +369,35 @@
                 transform: translateY(-50%);
                 display: grid !important;
                 grid-template-columns: 1fr 1fr;
-                width: 140px; /* Mais fino já que são só ícones */
+                width: 140px; /* Largura enxuta já que não tem texto */
                 background: rgba(0, 0, 0, 0.4);
                 border-radius: 15px;
                 padding: 12px;
-                gap: 8px;
+                gap: 10px;
                 z-index: 1001;
                 margin: 0;
             }
             
-            /* CSS GRID ORDER: Define a matriz exata 4linhas x 2colunas da esquerda */
-            #tab-trash          { order: 1; width: 100%; } /* Lixeira */
-            #btn-sort           { order: 2; width: 100%; } /* A-Z */
-            #tab-top            { order: 3; width: 100%; } /* Top */
-            #tab-manter         { order: 4; width: 100%; } /* Manter */
-            #tab-source         { order: 5; width: 100%; } /* Origem */
-            .btn-sync-landscape { order: 6; width: 100%; } /* Sincronizar */
-            .btn-prev-landscape { order: 7; width: 100%; } /* Seta Esquerda */
-            .btn-next-landscape { order: 8; width: 100%; } /* Seta Direita */
+            /* ORDEM DO GRID:
+               Lixeira (1) - A-Z (2)
+               Top (3)     - Manter (4)
+               Origem (5)  - Sync (6)
+               Seta Esq (7)- Seta Dir (8) */
+            #tab-trash          { order: 1; width: 100%; } 
+            #btn-sort           { order: 2; width: 100%; } 
+            #tab-top            { order: 3; width: 100%; } 
+            #tab-manter         { order: 4; width: 100%; } 
+            #tab-source         { order: 5; width: 100%; } 
+            .btn-sync-landscape { order: 6; width: 100%; } 
+            .btn-prev-landscape { order: 7; width: 100%; } 
+            .btn-next-landscape { order: 8; width: 100%; } 
             
-            /* Como não tem texto, alinha o ícone no meio e engorda o botão */
-            .folder-tab { text-align: center; padding: 15px 0px; font-size: 1.3rem; margin: 0; }
+            .folder-tab { text-align: center; margin: 0; }
 
-            /* Remove o botão SYNC "antigo" da lista inferior para não duplicar com o do Grid */
+            /* Oculta o botão SYNC "antigo" original da barra esquerda para não ter dois na tela */
             .left-panel .btn-sync { display: none !important; }
 
-            /* BOTÕES LADO DIREITO (Reject, Manter, Top): Margem 5%, desceram 5% (agora bottom: 10%) */
-            .right-panel {
-                position: fixed;
-                right: 5%;
-                bottom: 10%; 
-                flex-direction: row;
-                gap: 12px;
-                z-index: 1000;
-            }
-            
-            /* Reduz botões de ação para ficarem quadrados (só os ícones aparecem) */
-            .btn-right-action {
-                width: 55px !important; 
-                height: 55px !important; 
-                border-radius: 12px;
-            }
-            .btn-right-action .icon { font-size: 1.6rem; margin: 0; }
-
-            /* BOTÃO VOLTAR (UNDO): Geometria perfeita. Fica posicionado à esquerda do Reorder, cravado acima do Reject */
-            #undo_button {
-                position: fixed;
-                right: calc(5% + 145px); /* Salta o espaço ocupado pelo botão Reorder */
-                bottom: calc(10% + 70px); /* Mesma altura do Reorder, linha de cima dos botões de ação */
-                width: 55px !important; 
-                height: 55px !important; /* Quadrado */
-                border-radius: 12px;
-                z-index: 1000;
-                font-size: 1.5rem;
-                padding: 0;
-            }
-
-            /* REORDER: Acompanha a descida das ações, ficando na borda direita, linha de cima */
-            #danger-zone {
-                position: fixed;
-                right: 5%;
-                bottom: calc(10% + 70px); 
-                left: auto;
-                transform: none;
-                z-index: 1000;
-            }
-
-            /* OCULTAR TELA: Ancora no extremo canto inferior direito, base 5% */
+            /* OCULTAR TELA (Olho): Isolado e fixado no canto inferior DIREITO (Base 5%) */
             #hide-strip {
                 position: fixed;
                 right: 5%;
@@ -415,6 +405,38 @@
                 width: auto;
                 z-index: 1000;
                 justify-content: flex-end;
+                display: flex !important; /* Força exibir */
+            }
+
+            /* BOTÕES DE AÇÃO (Reject, Manter, Top): Acima do "Ocultar Tela" */
+            .right-panel {
+                position: fixed;
+                right: 5%;
+                bottom: calc(5% + 75px); /* Salta o olho (60px + 15px de gap) */
+                flex-direction: row;
+                gap: 12px;
+                z-index: 1000;
+            }
+
+            /* REORDER (ZONA DE PERIGO): Acima do grupo de ações (Top, Manter), alinhado à direita */
+            #danger-zone {
+                position: fixed;
+                right: 5%;
+                bottom: calc(5% + 150px); /* Salta o olho e o grupo de ações */
+                left: auto;
+                transform: none;
+                z-index: 1000;
+                display: flex;
+            }
+
+            /* BOTÃO VOLTAR (UNDO): Removido da esquerda para morar exatamente à esquerda do Reorder */
+            .left-panel {
+                position: fixed;
+                right: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) do Reorder */
+                bottom: calc(5% + 150px); /* Mesma altura (linha) do Reorder */
+                left: auto;
+                flex-direction: column;
+                z-index: 1000;
             }
         }
     </style>
@@ -432,7 +454,7 @@
 
         <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" title="Atalho: +">🔤 <span class="btn-text">A-Z</span></button>
 
-        <button class="folder-tab landscape-only btn-sync-landscape" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">SYNC</span></button>
+        <button class="folder-tab landscape-only btn-sync-landscape" onclick="reloadFolder()" title="Atalho: A ou 2">🔄</button>
         <button class="folder-tab landscape-only btn-prev-landscape" onclick="prevPhoto()" title="Atalho: Seta Esquerda">⬅️</button>
         <button class="folder-tab landscape-only btn-next-landscape" onclick="nextPhoto()" title="Atalho: Seta Direita">➡️</button>
     </div>
@@ -453,7 +475,7 @@
     </div>
 
     <div id="danger-zone">
-        <button id="btn-reorder" onclick="openReorderModal()">🔄 <span class="btn-text">REORDER (50)</span></button>
+        <button id="btn-reorder" onclick="openReorderModal()">🔀 <span class="btn-text">REORDER (50)</span></button>
     </div>
 
     <div id="reorder-modal" class="modal-overlay">
@@ -1091,7 +1113,7 @@
             let filesToMove = [];
             
             try {
-                btn.innerHTML = "⏳ BUSCANDO...";
+                btn.innerHTML = "⏳";
                 btn.disabled = true;
                 btn.style.opacity = "0.5";
 
@@ -1134,7 +1156,7 @@
                         })
                     );
                     
-                    btn.innerHTML = `⏳ MOVENDO ${Math.min(i + chunkSize, filesToMove.length)} / ${filesToMove.length}...`;
+                    btn.innerHTML = `⏳ ${Math.min(i + chunkSize, filesToMove.length)}/${filesToMove.length}`;
                     await Promise.all(movePromises); 
                 }
 
