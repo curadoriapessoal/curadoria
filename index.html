@@ -143,11 +143,13 @@
         /* O palco onde a foto fica posicionada e animada */
         #catalog-container { 
             position: relative; 
-            width: 95vw; 
-            height: 65vh; 
-            margin-top: 1vh; 
+            width: 85vw; 
+            height: 50vh; 
+            margin-top: 2vh; 
             display: none;
             transition: opacity 0.3s ease; 
+            margin-left: auto; /* Adicione isso para garantir que fique no centro */
+            margin-right: auto; /* Adicione isso para garantir que fique no centro */
         }
         @media (min-width: 768px) {
             #catalog-container { width: 50vw; } /* Em telas maiores, limita a largura */
@@ -315,6 +317,12 @@
                 justify-content: center;
                 font-size: 1.6rem !important; /* Ícones maiores para compensar a falta de texto */
                 flex-direction: row !important; /* Desativa a coluna (column) das ações da direita */
+                /* REJECT: Removido do grupo e fixado ao lado esquerdo do Olho (Abaixo do Manter) */
+            .right-panel .btn-reject {
+                position: fixed;
+                right: calc(5% + 72px); /* 72px pula o botão do olho (60px) + gap (12px). Fica alinhado com o Manter! */
+                bottom: 5%; /* Mesma altura da base do Olho */
+            }
             }
 
             /* Reseta a margem dos ícones internos */
