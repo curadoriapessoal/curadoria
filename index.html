@@ -3,6 +3,7 @@
 <head>
     <title>Editing Pro</title>
     <meta charset="utf-8" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <link rel="manifest" href="./manifest.json">
@@ -13,7 +14,11 @@
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     
     <style>
-        /* Layout Principal */
+        /* ===================================================
+           ESTILOS GERAIS E LAYOUT VERTICAL (PORTRAIT/DESKTOP)
+           =================================================== */
+        
+        /* O body ocupa 100% da tela e impede rolagem (scroll) para manter o aspecto de aplicativo nativo */
         body { 
             background-color: #000; 
             color: #fff; 
@@ -29,26 +34,7 @@
             padding-top: 2vh; 
         }
         
-        /* ---------------------------------------------------
-           NOME DO ARQUIVO
-           --------------------------------------------------- */
-        #filename-display {
-            width: 100%;
-            text-align: center;
-            font-size: 0.7rem; 
-            font-weight: 300; /* Fonte light */
-            color: #777;      /* Cor discreta */
-            margin-top: 2px;
-            min-height: 1rem; /* Evita que a interface pule quando estiver vazio */
-            z-index: 1000;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis; /* Adiciona "..." se o nome for muito longo */
-            padding: 0 10px;
-            box-sizing: border-box;
-        }
-
+        /* Botão inicial de Login do Google */
         #auth_button { 
             padding: 20px 40px; 
             background: #fff; 
@@ -69,9 +55,7 @@
             box-shadow: 0 0 0 #ccc, 0 4px 6px rgba(0,0,0,0.5);
         }
 
-        /* ---------------------------------------------------
-           NAVEGAÇÃO DE PASTAS (TOP BAR)
-           --------------------------------------------------- */
+        /* Barra de navegação superior (Abas das Pastas) */
         #folder-nav {
             width: 100%;
             display: none; 
@@ -84,6 +68,7 @@
             box-sizing: border-box;
         }
 
+        /* Estilo padrão das abas do menu */
         .folder-tab {
             background: #222;
             color: #888;
@@ -98,6 +83,7 @@
             white-space: nowrap; 
         }
 
+        /* Aba atualmente selecionada ganha destaque branco */
         .folder-tab.active {
             background: #fff;
             color: #000;
@@ -105,7 +91,7 @@
             box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
-        /* Estilo específico para a lixeira */
+        /* Estilo específico e de alerta para o botão da lixeira */
         .btn-trash {
             background: transparent;
             border-color: rgba(220, 53, 69, 0.5); 
@@ -117,9 +103,7 @@
             border-color: #dc3545;
         }
 
-        /* ---------------------------------------------------
-           CABEÇALHO (CONTADOR DISCRETO)
-           --------------------------------------------------- */
+        /* Container do texto que conta quantas fotos restam */
         #info-bar {
             position: relative;
             width: 100%;
@@ -128,9 +112,8 @@
             align-items: center; 
             padding: 5px 0;
             z-index: 1000;
-            pointer-events: none;
+            pointer-events: none; /* Deixa o clique vazar por ele */
         }
-
         #photo-count {
             font-size: 1.2rem; 
             font-weight: bold;
@@ -139,22 +122,53 @@
             display: none; 
         }
 
-        /* ---------------------------------------------------
-           CONTAINER DE FOTOS
-           --------------------------------------------------- */
+        /* Container do texto que exibe o nome original do arquivo RAW/JPG */
+        #filename-display {
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem; 
+            font-weight: 300; /* Fonte discreta */
+            color: #777;      
+            margin-top: 2px;
+            min-height: 1rem; 
+            z-index: 1000;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adiciona '...' se for grande demais */
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+      /* O palco onde a foto fica posicionada e animada (Base Mobile Retrato) */
         #catalog-container { 
             position: relative; 
-            width: 95vw; 
-            height: 58vh; 
-            margin-top: 1vh; 
+            width: 85vw; 
+            height: 50vh; 
+            margin-top: 2vh; 
             display: none;
             transition: opacity 0.3s ease; 
+            margin-left: auto; 
+            margin-right: auto; 
         }
 
-        @media (min-width: 768px) {
-            #catalog-container { width: 50vw; }
+        /* ===================================================
+           MODO RESPONSIVO: DESKTOP / TELAS GRANDES
+           Expande o container dinamicamente respeitando o limite de 800x800px
+           =================================================== */
+        @media screen and (min-width: 951px) {
+            #catalog-container { 
+                width: 90vw; /* Expande a largura para preencher a tela */
+                height: calc(100vh - 240px); /* Altura dinâmica: Total da tela MENOS o topo e os botões da base */
+                margin-top: 2vh; 
+            }
+            .card img {
+                max-width: 800px !important; /* Trava a largura máxima na resolução nativa da foto */
+                max-height: 800px !important; /* Trava a altura máxima na resolução nativa da foto */
+            }
         }
 
+        /* O "cartão" da foto em si */
         .card { 
             position: absolute; 
             width: 100%; 
@@ -166,19 +180,18 @@
             justify-content: center;
             transition: transform 0.2s ease-out, opacity 0.2s ease-out; 
         }
-
         .card img { 
             max-width: 100%; 
             max-height: 100%; 
             width: auto;
             height: auto;
-            object-fit: contain; 
+            object-fit: contain; /* Garante que a foto não seja esticada ou cortada */
             pointer-events: none;
             border-radius: 12px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.7);
         }
 
-        /* Zonas de Toque Laterais Invisíveis */
+        /* Zonas gigantes e invisíveis nas laterais da tela para passar foto com o toque (Mobile Vertical) */
         .nav-zone {
             position: absolute;
             top: 0; bottom: 0;
@@ -193,166 +206,273 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-
-        #nav-left { 
-            left: 0; justify-content: flex-start; padding-left: 15px; 
-            background: linear-gradient(to right, rgba(0,0,0,0.3), transparent);
-        }
-        #nav-right { 
-            right: 0; justify-content: flex-end; padding-right: 15px; 
-            background: linear-gradient(to left, rgba(0,0,0,0.3), transparent);
-        }
-
+        #nav-left { left: 0; justify-content: flex-start; padding-left: 15px; background: linear-gradient(to right, rgba(0,0,0,0.3), transparent); }
+        #nav-right { right: 0; justify-content: flex-end; padding-right: 15px; background: linear-gradient(to left, rgba(0,0,0,0.3), transparent); }
         .nav-zone:active { color: rgba(255,255,255,1); background: rgba(255,255,255,0.1); }
 
+        /* Mensagem de final de fila quando a pasta esvazia */
+        #end-screen { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 100%; display: none; flex-direction: column; align-items: center; gap: 20px; z-index: 0; 
+        }
+        #empty-message { font-size: 1.2rem; color: #888; text-align: center; margin-bottom: 10px; }
+
         /* ---------------------------------------------------
-           BOTÃO REORDER (ZONA DE AÇÃO)
+           BOTÃO REORDER (ZONA DE AÇÃO) E MODAIS DE CONFIRMAÇÃO
            --------------------------------------------------- */
+        
+        /* O Wrapper do Reorder agora vive dentro do painel da esquerda! */
         #danger-zone {
-            display: none; 
-            position: absolute;
-            bottom: 22vh; 
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
+            display: none; /* Inicialmente oculto, controlado ativamente pelo JavaScript */
         }
-
+        /* O estilo visual do botão Reorder foi mantido */
         #btn-reorder {
-            background: rgba(13, 110, 253, 0.05);
-            border: 1px solid rgba(13, 110, 253, 0.3);
-            color: rgba(13, 110, 253, 0.8);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            transition: all 0.2s ease;
+            border-color: rgba(13, 110, 253, 0.2); 
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1);
         }
 
-        #btn-reorder:hover {
-            background: rgba(13, 110, 253, 0.2);
-            color: #0d6efd;
-            border-color: #0d6efd;
-        }
-
-        /* ---------------------------------------------------
-           MODAL DE CONFIRMAÇÃO (POPUP)
-           --------------------------------------------------- */
+        /* Fundo desfocado dos avisos (Popups) */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85);
-            z-index: 9999999;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); z-index: 9999999; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
         }
-
+        /* Caixa do aviso */
         .modal-content {
-            background: #111;
-            border: 1px solid #dc3545;
-            padding: 25px;
-            border-radius: 15px;
-            width: 85vw;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(220, 53, 69, 0.3);
-            font-family: sans-serif;
+            background: #111; border: 1px solid #dc3545; padding: 25px; border-radius: 15px;
+            width: 85vw; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(220, 53, 69, 0.3); font-family: sans-serif;
         }
-
+        /* Tema Azul para o Modal de Reorder */
         .modal-content.reorder-theme { border-color: #0d6efd; box-shadow: 0 10px 40px rgba(13, 110, 253, 0.2); }
         .modal-content.reorder-theme h3 { color: #0d6efd; }
         .btn-confirm.reorder-btn { background: #0d6efd; opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(13, 110, 253, 0.4); }
         
-        .checkbox-container {
-            display: flex; align-items: flex-start; gap: 10px;
-            text-align: left; font-size: 0.85rem; color: #fff;
-            background: #222; padding: 12px; border-radius: 8px; margin-bottom: 25px;
-            cursor: pointer;
-        }
-
-        .checkbox-container input { margin-top: 2px; accent-color: #dc3545; width: 18px; height: 18px; }
-        
         .modal-actions { display: flex; gap: 10px; justify-content: space-between; }
-        
-        .btn-cancel, .btn-confirm {
-            flex: 1; padding: 12px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.8rem;
-        }
-        
+        .btn-cancel, .btn-confirm { flex: 1; padding: 12px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
         .btn-cancel { background: #444; color: #fff; }
         .btn-confirm { background: #dc3545; color: #fff; opacity: 0.4; cursor: not-allowed; transition: all 0.2s;}
         .btn-confirm.enabled { opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
 
         /* ---------------------------------------------------
-           LAYOUT INFERIOR (BOTÕES DE AÇÃO)
+           PAINÉIS DE BOTÕES INFERIORES (AÇÕES)
            --------------------------------------------------- */
         #bottom-area {
             position: fixed;
             bottom: env(safe-area-inset-bottom, 25px); 
-            left: 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px; 
-            z-index: 999999;
-            pointer-events: none; 
+            left: 0; width: 100%; display: flex; flex-direction: column; gap: 15px; 
+            z-index: 999999; pointer-events: none; /* Apenas os botões pegam clique */
         }
 
         #controls-wrapper {
-            display: none; 
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 0 10px;
-            pointer-events: none;
+            display: none; justify-content: space-between; align-items: flex-end; padding: 0 10px; pointer-events: none;
+            position: relative; /* Permite posicionar o VOLTAR absolutamente dentro dele */
         }
 
         .left-panel { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
         .right-panel { display: flex; flex-direction: row; gap: 10px; pointer-events: auto; }
 
+        /* Posicionamento independente do botão VOLTAR acima da aba direita */
+        #undo-zone {
+            position: absolute;
+            right: 10px; /* Alinhado com o padding-right do controls-wrapper */
+            bottom: 116px; /* Fica acima do botão TOP (104px altura + 12px gap no desktop) */
+            z-index: 1000;
+            pointer-events: auto;
+        }
+
+        /* Classes auxiliares para textos dos botões (Serão ocultos no mobile) */
+        .btn-text { display: inline; }
+
+        /* Estilo base com efeito 'Glassmorphism' dos botões de ação */
         .solid-btn {
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-transform: uppercase;
-            touch-action: manipulation;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); color: #fff; font-weight: 700; cursor: pointer;
+            transition: all 0.2s ease; text-shadow: 0 1px 4px rgba(0,0,0,0.8); display: flex; align-items: center;
+            justify-content: center; text-transform: uppercase; touch-action: manipulation;
             background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 100%);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
         .solid-btn:active { transform: scale(0.96) translateY(2px); }
 
         .btn-left-stack { width: 130px; height: 46px; border-radius: 12px; font-size: 0.8rem; letter-spacing: 0.5px; }
         
+        #undo_button { width: 65px; height: 46px; border-radius: 12px; font-size: 1.2rem; padding: 0; }
         .btn-undo { border-color: rgba(255, 193, 7, 0.2); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1); visibility: hidden; }
         .btn-sync { border-color: rgba(232, 62, 140, 0.2); box-shadow: 0 4px 15px rgba(232, 62, 140, 0.1); }
 
         .btn-right-action { width: 65px; height: 104px; flex-direction: column; border-radius: 16px; font-size: 0.65rem; gap: 8px; }
         .btn-right-action .icon { font-size: 1.4rem; }
-        
         .btn-reject { border-color: rgba(220, 53, 69, 0.2); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1); }
         .btn-manter { border-color: rgba(13, 110, 253, 0.2); box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1); }
         .btn-top { border-color: rgba(40, 167, 69, 0.2); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1); }
 
-        /* Botão Ocultar/Ativar Tela */
+        /* Botão para apagar a tela contra inatividade ou pra ver a imagem crua */
         #hide-strip { display: none; justify-content: center; width: 100%; pointer-events: none; }
-        #hide-btn { background: rgba(128, 128, 128, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 25px; border-radius: 25px; font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; text-transform: uppercase; }
+        #hide-btn { 
+            background: rgba(128, 128, 128, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 25px; border-radius: 25px; 
+            font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            pointer-events: auto; text-transform: uppercase; 
+        }
 
-        #end-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none; flex-direction: column; align-items: center; gap: 20px; z-index: 0; }
-        #empty-message { font-size: 1.2rem; color: #888; text-align: center; margin-bottom: 10px;}
+        /* Oculta por padrão os botões do layout Landscape para não aparecerem na tela em pé */
+        .landscape-only { display: none; }
 
+        /* ===================================================
+           MODO RESPONSIVO: MOBILE GERAL (Retrato e Paisagem)
+           Esconde os textos, permitindo botões compactos e quadrados
+           =================================================== */
+        @media screen and (max-width: 950px) {
+            /* Oculta todos os textos envoltos em .btn-text */
+            .btn-text { display: none !important; }
+
+            /* Força formato quadrado para botões inferiores (Sync, Voltar, Ações, Reorder, Olho) */
+            .btn-left-stack, .btn-right-action, #hide-btn, #btn-reorder, #undo_button {
+                width: 60px !important;
+                height: 60px !important;
+                border-radius: 16px;
+                padding: 0 !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.6rem !important; /* Ícones maiores para compensar a falta de texto */
+                flex-direction: row !important; /* Desativa a coluna (column) das ações da direita */
+            }
+
+            /* No Mobile Retrato, o bloco do Voltar desce porque as ações da direita encolheram para 60px */
+            #undo-zone {
+                bottom: 72px; /* 60px (altura do botão Top mobile) + 12px de margem (gap) */
+            }
+
+            /* Reseta a margem dos ícones internos */
+            .btn-right-action .icon { font-size: 1.6rem; margin: 0; }
+
+            /* Ajusta abas da pasta do topo/lateral para ficarem mais curtas e com fontes maiores */
+            .folder-tab {
+                font-size: 1.3rem !important;
+                padding: 12px 0 !important;
+                border-radius: 14px;
+            }
+        }
+
+        /* ===================================================
+           MODO RESPONSIVO: LANDSCAPE (CELULAR DEITADO)
+           Usa a lógica do D-Pad na esquerda e libera o centro.
+           =================================================== */
+        @media screen and (max-width: 950px) and (orientation: landscape),
+               screen and (max-height: 600px) and (orientation: landscape) {
+            
+            body { padding-top: 0; }
+
+            /* Exibe as setas de imagem e o botão de Sync exclusivo para o grid lateral */
+            .landscape-only { display: block; }
+
+            /* TEXTOS INFORMATIVOS (Contador/Nome): Movidos para a extrema DIREITA (Topo) */
+            #info-bar { 
+                position: fixed; top: 15px; right: 5%; left: auto;
+                transform: none; width: auto; z-index: 1002; justify-content: flex-end;
+            }
+            #filename-display { 
+                position: fixed; top: 40px; right: 5%; left: auto;
+                transform: none; width: 40vw; z-index: 1002; text-align: right; padding: 0;
+            }
+
+            /* ÁREA DA IMAGEM: Centro livre, 96% de altura (2% de topo e base respiro) */
+            #catalog-container {
+                width: 40vw; 
+                height: 96vh; 
+                margin-top: 2vh; 
+                margin-bottom: 2vh;
+                margin-left: auto; margin-right: auto;
+            }
+
+            /* REMOVE AS ZONAS INVISÍVEIS LATERAIS DE TOQUE na foto para evitar esbarrões no celular deitado */
+            #nav-left, #nav-right { display: none !important; }
+
+            /* LATERAL ESQUERDA (D-Pad): Abas numa grade de 2 Colunas x 4 Linhas com margem de 5% */
+            #folder-nav {
+                position: fixed;
+                top: 50%;
+                left: 2%; 
+                transform: translateY(-50%);
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                width: 140px; /* Largura enxuta já que não tem texto */
+                background: rgba(0, 0, 0, 0.4);
+                border-radius: 15px;
+                padding: 8px;
+                gap: 10px;
+                z-index: 1001;
+                margin: 0;
+            }
+            
+            /* ORDEM DO GRID:
+               Lixeira (1) - A-Z (2)
+               Top (3)     - Manter (4)
+               Origem (5)  - Sync (6)
+               Seta Esq (7)- Seta Dir (8) */
+            #tab-trash          { order: 1; width: 100%; } 
+            #btn-sort           { order: 2; width: 100%; } 
+            #tab-top            { order: 3; width: 100%; } 
+            #tab-manter         { order: 4; width: 100%; } 
+            #tab-source         { order: 5; width: 100%; } 
+            .btn-sync-landscape { order: 6; width: 100%; } 
+            .btn-prev-landscape { order: 7; width: 100%; } 
+            .btn-next-landscape { order: 8; width: 100%; } 
+            
+            .folder-tab { text-align: center; margin: 0; }
+
+            /* Oculta o botão SYNC "antigo" original da barra esquerda para não ter dois na tela */
+            .left-panel .btn-sync { display: none !important; }
+
+            /* OCULTAR TELA (Olho): Isolado e fixado no canto inferior DIREITO (Base 5%) */
+            #hide-strip {
+                position: fixed;
+                right: 5%;
+                bottom: 5%;
+                width: auto;
+                z-index: 1000;
+                justify-content: flex-end;
+                display: flex !important; /* Força exibir */
+            }
+
+            /* BOTÕES DE AÇÃO (Manter, Top): Acima do "Ocultar Tela" */
+            .right-panel {
+                position: fixed;
+                right: 5%;
+                bottom: calc(5% + 72px); /* Salta o olho (60px + 12px de gap) */
+                flex-direction: row;
+                gap: 12px;
+                z-index: 1000;
+            }
+
+            /* REJECT (ZONA DE AÇÃO ESQUERDA): Removido do fluxo do painel direito e posicionado abaixo do Manter */
+            .right-panel .btn-reject {
+                position: fixed;
+                right: calc(5% + 72px); /* Salta a largura do Olho/Top (60px + 12px gap), alinhando abaixo do Manter */
+                bottom: 5%; /* Mesma altura (linha) do Olho */
+            }
+
+            /* REORDER (ZONA DE PERIGO): Acima do grupo de ações (Top), alinhado à extrema direita */
+            /* IMPORTANTE: Como o Reorder agora mora dentro da .left-panel, movemos a panel inteira! */
+            .left-panel {
+                position: fixed;
+                right: 5%;
+                bottom: calc(5% + 144px); /* Pula Olho e Top (60+12 + 60+12) */
+                left: auto;
+                flex-direction: column;
+                z-index: 1000;
+            }
+
+            /* BOTÃO VOLTAR (UNDO): Removido da esquerda para morar exatamente à esquerda do Reorder, acima do Manter */
+            #undo-zone {
+                position: fixed;
+                right: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) da left-panel (Reorder) */
+                bottom: calc(5% + 144px); /* Mesma altura (linha) do Reorder */
+                left: auto;
+                z-index: 1000;
+            }
+        }
     </style>
 </head>
 <body>
@@ -362,15 +482,19 @@
     <div id="folder-nav">
         <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject (Atalho: G ou 3)">🗑️</button>
         
-        <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source" title="Atalho: 7">Origem</button>
-        <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter" title="Atalho: 8">Manter</button>
-        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top" title="Atalho: 9">Top</button>
+        <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source" title="Atalho: 7">📥 <span class="btn-text">Origem</span></button>
+        <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter" title="Atalho: 8">📁 <span class="btn-text">Manter</span></button>
+        <button class="folder-tab" onclick="switchFolder('top')" id="tab-top" title="Atalho: 9">🏳️ <span class="btn-text">Top</span></button>
 
-        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" title="Atalho: +">🔤 A-Z</button>
+        <button id="btn-sort" class="folder-tab" onclick="toggleSortOrder()" title="Atalho: +">🔤 <span class="btn-text">A-Z</span></button>
+
+        <button class="folder-tab landscape-only btn-sync-landscape" onclick="reloadFolder()" title="Atalho: A ou 2">🔄</button>
+        <button class="folder-tab landscape-only btn-prev-landscape" onclick="prevPhoto()" title="Atalho: Seta Esquerda">⬅️</button>
+        <button class="folder-tab landscape-only btn-next-landscape" onclick="nextPhoto()" title="Atalho: Seta Direita">➡️</button>
     </div>
     
     <div id="info-bar">
-   <div id="photo-count">...</div>
+        <div id="photo-count">...</div>
     </div>
 
     <div id="filename-display"></div>
@@ -384,10 +508,6 @@
         </div>
     </div>
 
-    <div id="danger-zone">
-        <button id="btn-reorder" onclick="openReorderModal()">REORDER (50)</button>
-    </div>
-
     <div id="reorder-modal" class="modal-overlay">
         <div class="modal-content reorder-theme">
             <h3>🔄 TRANSFERIR FOTOS 🔄</h3>
@@ -399,6 +519,7 @@
             </div>
         </div>
     </div>
+    
     <div id="install-modal" class="modal-overlay">
         <div class="modal-content reorder-theme" style="border-color: #28a745; box-shadow: 0 10px 40px rgba(40, 167, 69, 0.2);">
             <h3 style="color: #28a745;">📱 INSTALAR APP 📱</h3>
@@ -413,59 +534,75 @@
 
     <div id="bottom-area">
         <div id="controls-wrapper">
+            
             <div class="left-panel">
-                <button id="undo_button" class="solid-btn btn-left-stack btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ VOLTAR</button>
-                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 SINCRONIZAR</button>
+                <div id="danger-zone">
+                    <button id="btn-reorder" class="solid-btn btn-left-stack" onclick="openReorderModal()">🔀 <span class="btn-text">REORDER</span></button>
+                </div>
+                
+                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">SINCRONIZAR</span></button>
             </div>
             
             <div class="right-panel">
                 <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)" title="Atalho: S ou 4">
-                    <span class="icon">🏴</span> REJECT
+                    <span class="icon">🏴</span> <span class="btn-text">REJECT</span>
                 </button>
                 <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)" title="Atalho: D ou 5">
-                    <span class="icon">📁</span> MANTER
+                    <span class="icon">📁</span> <span class="btn-text">MANTER</span>
                 </button>
                 <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)" title="Atalho: F ou 6">
-                    <span class="icon">🏳️</span> TOP
+                    <span class="icon">🏳️</span> <span class="btn-text">TOP</span>
                 </button>
+            </div>
+            
+            <div id="undo-zone">
+                <button id="undo_button" class="solid-btn btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ <span class="btn-text">VOLTAR</span></button>
             </div>
         </div>
 
         <div id="hide-strip">
-            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">OCULTAR TELA</button>
+            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">👁️ <span class="btn-text">OCULTAR TELA</span></button>
         </div>
     </div>
 
     <script type="text/javascript">
+        // =======================================================
+        // CREDENCIAIS E ESTRUTURAS DO GOOGLE DRIVE
+        // =======================================================
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
         
+        // Mapeamento de IDs das Pastas no Drive (Substitua pelos reais caso crie novas)
         const FOLDERS = {
             'source': '1l5c1yWkNJWI3NIKp_6Fnxs56nzc44P6F',
-            1: '1UL8zEJGWWH2A1NEt-pUhRDQ9sTj9KI6w', // Reject
-            3: '1HDf3BCTUulwYA_IdF2AlTmZcy_TyO19x', // Manter
-            5: '1uHGn2rpZJj68QSe0EVJNh8JCXl7oiKoh'  // Top
+            1: '1UL8zEJGWWH2A1NEt-pUhRDQ9sTj9KI6w', // Pasta Reject
+            3: '1HDf3BCTUulwYA_IdF2AlTmZcy_TyO19x', // Pasta Manter
+            5: '1uHGn2rpZJj68QSe0EVJNh8JCXl7oiKoh'  // Pasta Top
         };
 
-        let activeFolderKey = 'source'; 
+        // Estado Global da Aplicação
+        let activeFolderKey = 'source'; // Define que a tela inicia na Origem
         let tokenClient;
         let gapiInited = false;
         let gsisInited = false;
-        let nextPageToken = null;
-        let isFetching = false;
+        let nextPageToken = null; // Usado para paginação na API do Drive (+ de 100 fotos)
+        let isFetching = false; // Trava contra clicks múltiplos simultâneos
         let undoZIndex = 200000; 
         
-        const processedIds = new Set(); 
-        let actionHistory = []; 
-        let totalPhotosInFolder = 0; 
-        let currentViewIndex = 0;
-        let isScreenHidden = false;
-        let currentSortOrder = 'name'; 
+        const processedIds = new Set(); // Garante que a API não carregue a mesma foto 2x
+        let actionHistory = []; // Armazena memória do último movimento para o "Voltar (Undo)"
+        let totalPhotosInFolder = 0; // O contador do cabeçalho
+        let currentViewIndex = 0; // A foto atual em foco na tela
+        let isScreenHidden = false; // Controle da inatividade / Ocultar Tela
+        let currentSortOrder = 'name'; // Modo de ordenação: nome, tamanho, etc
 
-        // ----- VARIÁVEIS PARA CONTROLE DE INATIVIDADE -----
+        // Variáveis de inatividade e tela preta
         let inactivityTimer = null;
-        const INACTIVITY_DELAY = 10000; // 10 segundos
+        const INACTIVITY_DELAY = 10000; // 10 segundos ausente = Oculta a tela
 
+        // =======================================================
+        // INICIALIZAÇÃO DA API (GAPI E GSI)
+        // =======================================================
         function gapiLoaded() { 
             gapi.load('client', () => {
                 gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
@@ -486,7 +623,7 @@
 
         function maybeEnableButtons() {
             if (gapiInited && gsisInited) {
-                document.getElementById('auth_button').style.display = 'block';
+                document.getElementById('auth_button').style.display = 'block'; // Libera o Login
             }
         }
 
@@ -497,6 +634,7 @@
                     return;
                 }
                 
+                // Autenticou com sucesso, esconde login e mostra toda a interface
                 document.getElementById('auth_button').style.display = 'none';
                 document.getElementById('folder-nav').style.display = 'flex';
                 document.getElementById('catalog-container').style.display = 'block';
@@ -506,29 +644,33 @@
                 document.getElementById('danger-zone').style.display = 'block'; 
                 
                 loadActiveFolder();
-                resetInactivityTimer(); // Inicia o monitoramento após login
+                resetInactivityTimer(); // Começa a contar inatividade
             };
             tokenClient.requestAccessToken(); 
         }
 
-        // ----- FUNÇÕES DE CONTROLE DE VISIBILIDADE E INATIVIDADE -----
+        // =======================================================
+        // SISTEMA DE INATIVIDADE (OCULTAR/EXIBIR TELA)
+        // =======================================================
         function hideImageArea() {
             const container = document.getElementById('catalog-container');
             const hideBtn = document.getElementById('hide-btn');
+            const hideBtnText = hideBtn.querySelector('.btn-text');
             if (container) {
                 isScreenHidden = true;
-                container.style.opacity = '0.01';
-                if (hideBtn) hideBtn.innerText = 'ATIVAR TELA';
+                container.style.opacity = '0.01'; // Deixa praticamente invisível (protege a tela de burn-in)
+                if (hideBtnText) hideBtnText.innerText = 'ATIVAR TELA';
             }
         }
 
         function showImageArea() {
             const container = document.getElementById('catalog-container');
             const hideBtn = document.getElementById('hide-btn');
+            const hideBtnText = hideBtn.querySelector('.btn-text');
             if (container) {
                 isScreenHidden = false;
                 container.style.opacity = '1';
-                if (hideBtn) hideBtn.innerText = 'OCULTAR TELA';
+                if (hideBtnText) hideBtnText.innerText = 'OCULTAR TELA';
             }
         }
 
@@ -547,7 +689,7 @@
                 clearTimeout(inactivityTimer);
                 
                 const authBtn = document.getElementById('auth_button');
-                // Só arma o timer se o usuário estiver logado e a tela não estiver oculta
+                // Só arma o timer de 10s se o usuário estiver logado e a tela visível
                 if (authBtn && authBtn.style.display === 'none' && !isScreenHidden) {
                     inactivityTimer = setTimeout(hideImageArea, INACTIVITY_DELAY);
                 }
@@ -556,20 +698,26 @@
             }
         }
 
+        // Fica de olho em movimentos ou toques no celular para manter a tela "acordada"
         window.addEventListener('DOMContentLoaded', () => {
             ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'].forEach(evt => {
                 document.addEventListener(evt, resetInactivityTimer, { passive: true });
             });
         });
 
+        // =======================================================
+        // NAVEGAÇÃO ENTRE PASTAS
+        // =======================================================
         function switchFolder(folderKey) {
             if (activeFolderKey === folderKey) return; 
 
+            // Troca a cor da aba ativada
             document.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + folderKey).classList.add('active');
 
             activeFolderKey = folderKey;
             
+            // Oculta botão Reorder se não estiver na Origem
             document.getElementById('danger-zone').style.display = (folderKey === 'source') ? 'block' : 'none';
 
             loadActiveFolder();
@@ -577,8 +725,10 @@
 
         function loadActiveFolder() {
             const container = document.getElementById('catalog-container');
+            // Remove as fotos velhas da memória visual
             container.querySelectorAll('.card').forEach(c => c.remove());
             
+            // Reseta os estados pro zero
             nextPageToken = null; 
             currentViewIndex = 0;
             processedIds.clear();
@@ -591,7 +741,11 @@
             listPhotos();
         }
 
+        // =======================================================
+        // LÓGICA DE EXIBIÇÃO E TROCA DE CARTÕES (FOTOS)
+        // =======================================================
         function getVisibleCards() {
+            // Ignora os cards que já estão voando pra fora da tela (animating)
             return Array.from(document.querySelectorAll('.card:not(.animating)'));
         }
 
@@ -605,6 +759,7 @@
             const navLeft = document.getElementById('nav-left');
             const navRight = document.getElementById('nav-right');
 
+            // Se não tem fotos, some tudo
             if(cards.length === 0) {
                 navLeft.style.display = 'none';
                 navRight.style.display = 'none';
@@ -614,12 +769,13 @@
             if (currentViewIndex >= cards.length) currentViewIndex = Math.max(0, cards.length - 1);
             if (currentViewIndex < 0) currentViewIndex = 0;
 
-           cards.forEach((card, index) => {
+            // Esconde todas e mostra apenas a do índice atual
+            cards.forEach((card, index) => {
                 if (index === currentViewIndex) {
                     card.style.visibility = 'visible';
                     card.style.opacity = '1';
                     
-                    // Atualiza o display com o nome do arquivo do card ativo
+                    // Atualiza o display com o nome do arquivo RAW/JPG do card atual
                     const nameDisplay = document.getElementById('filename-display');
                     if (nameDisplay) nameDisplay.innerText = card.dataset.fileName;
                     
@@ -629,6 +785,7 @@
                 }
             });
 
+            // Lógica das setas laterais (Invisíveis no retrato)
             navLeft.style.display = currentViewIndex > 0 ? 'flex' : 'none';
             navRight.style.display = (currentViewIndex < cards.length - 1 || nextPageToken) ? 'flex' : 'none';
         }
@@ -646,10 +803,11 @@
                 currentViewIndex++;
                 updateCardsVisibility();
             } else if (nextPageToken) {
-                listPhotos(); 
+                listPhotos(); // Chama API pra baixar mais fotos se chegou no final do lote
             }
         }
 
+        // Teclas de atalho para uso no Desktop ou teclado do tablet
         document.addEventListener('keydown', (event) => {
             if (event.repeat) return; 
 
@@ -670,21 +828,26 @@
             }
         });
 
+        // Altera o modo como a API do Google joga a lista (Por nome, data ou tamanho)
         function toggleSortOrder() {
             const btn = document.getElementById('btn-sort');
+            const textSpan = btn.querySelector('.btn-text');
             if (currentSortOrder === 'name') {
                 currentSortOrder = 'createdTime desc'; 
-                btn.innerHTML = '📅 TIME';
+                if (textSpan) textSpan.innerHTML = 'TIME';
             } else if (currentSortOrder === 'createdTime desc') {
                 currentSortOrder = 'quotaBytesUsed desc'; 
-                btn.innerHTML = '💾 SIZE';
+                if (textSpan) textSpan.innerHTML = 'SIZE';
             } else {
                 currentSortOrder = 'name'; 
-                btn.innerHTML = '🔤 A-Z';
+                if (textSpan) textSpan.innerHTML = 'A-Z';
             }
             reloadFolder(); 
         }
 
+        // =======================================================
+        // BUSCANDO ARQUIVOS DA API (GOOGLE DRIVE)
+        // =======================================================
         function getActiveFolderId() {
             if (activeFolderKey === 'source') return FOLDERS['source'];
             if (activeFolderKey === 'manter') return FOLDERS[3];
@@ -701,6 +864,7 @@
             countDisplay.innerText = "...";
             
             try {
+                // Loop necessário pois o Google só conta até 1000 arquivos de uma vez
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query, pageSize: 1000, fields: 'nextPageToken, files(id)', 
@@ -717,6 +881,7 @@
 
         function updateCounterDisplay() { document.getElementById('photo-count').innerText = totalPhotosInFolder; }
 
+        // Faz o download das miniaturas (100 por vez)
         async function listPhotos() {
             if (isFetching) return;
             isFetching = true;
@@ -726,7 +891,8 @@
             const query = `'${currentId}' in parents and mimeType contains 'image/' and trashed = false`;
             const requestParams = {
                 'pageSize': 100, 
-                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents)', // 'name' adicionado aqui
+                // Busca ID, Nome, URL da Imagem e as pastas pais
+                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents)', 
                 'q': query,
                 'orderBy': currentSortOrder 
             };
@@ -756,12 +922,14 @@
                 processedIds.add(file.id);
                 addedCount++;
 
+                // O macete =s800 no link do Google aumenta a resolução da foto na tela de 220px para 800px
                 const card = createCardElement(file.id, file.thumbnailLink.replace('=s220', '=s800'), file.name);                
                 container.appendChild(card);
             });
 
             updateCardsVisibility();
 
+            // Se filtrou arquivos que já estavam em tela, baixa mais 100 da fila
             if (addedCount === 0 && getVisibleCards().length === 0) {
                 if (nextPageToken) listPhotos();
                 else endScreen.style.display = 'flex';
@@ -772,21 +940,26 @@
             const card = document.createElement('div');
             card.className = 'card';
             card.dataset.fileId = fileId; 
-            card.dataset.fileName = fileName || 'Desconhecido'; // Armazena o nome
+            card.dataset.fileName = fileName || 'Desconhecido'; // Guarda o nome RAW/JPG na memória do DOM
             card.innerHTML = `<img src="${imgUrl}">`;
             return card;
         }
 
+        // =======================================================
+        // CLASSIFICAÇÃO: ENVIANDO PARA REJECT, MANTER E TOP
+        // =======================================================
         function handleGlobalAction(targetRating) {
             const activeCard = getActiveCard();
             if (!activeCard) return;
             const fileId = activeCard.dataset.fileId;
             
+            // X dita pra qual lado a animação joga a foto na tela
             let x = 0, y = 0;
-            if (targetRating === 1) { x = -500; y = 100; } 
-            else { x = 500; y = 100; } 
+            if (targetRating === 1) { x = -500; y = 100; } // Reject voa pra esquerda
+            else { x = 500; y = 100; } // Manter/Top voam pra direita
             
             let targetFolderId = FOLDERS[targetRating];
+            // Bloqueio de redundância: se já ta no Manter, mandar manter o envia de volta à Origem (Revert)
             if (activeFolderKey === 'manter' && targetRating === 3) targetFolderId = FOLDERS['source'];
             if (activeFolderKey === 'top' && targetRating === 5) targetFolderId = FOLDERS['source'];
 
@@ -794,24 +967,27 @@
         }
 
        function animateOut(el, fileId, targetFolderId, x, y) {
-            el.classList.add('animating'); 
+            el.classList.add('animating'); // Impede que o mouse toque no card de novo
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
             const imgUrl = el.querySelector('img').src;
             const originFolderId = getActiveFolderId(); 
             
-            updateCardsVisibility(); 
-            if (totalPhotosInFolder > 0) totalPhotosInFolder--;
+            updateCardsVisibility(); // Chama a próxima foto pro meio da tela
+            if (totalPhotosInFolder > 0) totalPhotosInFolder--; // Diminui o contador do alto
             updateCounterDisplay();
 
+            // Salva na memória RAM local pra se você apertar o UNDO
             actionHistory.push({ fileId: fileId, destination: targetFolderId, origin: originFolderId, imgUrl: imgUrl });
             updateUndoButtonState();
 
+            // Depois da animação visual, deleta o card HTML
             setTimeout(() => {
                 el.remove();
                 checkAndFetchMore();
             }, 200);
 
+            // A chamada REAL que move a foto no servidor do Drive (Assíncrona para não travar a sua tela)
             if (targetFolderId !== originFolderId) {
                 gapi.client.drive.files.update({
                     fileId: fileId, 
@@ -826,21 +1002,27 @@
             }
         }
 
+        // =======================================================
+        // DESFAZER AÇÃO (UNDO)
+        // =======================================================
         async function undoLastAction() {
             if (actionHistory.length === 0) return;
-            const lastAction = actionHistory.pop();
+            const lastAction = actionHistory.pop(); // Tira do histórico
             updateUndoButtonState();
 
+            // Se o arquivo veio da pasta atual (ex: ele era Origem e você mandou pro Reject estando na Origem)
             if (lastAction.origin === getActiveFolderId()) {
-                totalPhotosInFolder++;
+                totalPhotosInFolder++; // Devolve o contador
                 updateCounterDisplay();
                 
-                processedIds.delete(lastAction.fileId);
+                processedIds.delete(lastAction.fileId); // Permite processar ele de novo
                 document.getElementById('end-screen').style.display = 'none';
 
                 const container = document.getElementById('catalog-container');
-                const card = createCardElement(lastAction.fileId, lastAction.imgUrl);
+                // Recria a foto. Usamos o histórico pra recuperar imagem e um nome fixo porque a API apagou o metadado local
+                const card = createCardElement(lastAction.fileId, lastAction.imgUrl, "AÇÃO DESFEITA");
                 
+                // Anima ela caindo do teto da tela
                 card.style.transform = 'translateY(-100px) scale(0.9)'; 
                 card.style.opacity = '0';
                 
@@ -852,13 +1034,14 @@
                 }
 
                 updateCardsVisibility();
-                void card.offsetWidth;
+                void card.offsetWidth; // Força re-renderização do navegador pra que a animação corra fluida
             
                 card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
                 card.style.transform = 'translateY(0) scale(1)';
                 card.style.opacity = '1';
             } 
 
+            // Desfaz a movimentação no servidor Google
             gapi.client.drive.files.update({
                 fileId: lastAction.fileId, 
                 addParents: lastAction.origin, 
@@ -873,9 +1056,10 @@
 
         function updateUndoButtonState() {
             const undoBtn = document.getElementById('undo_button');
-            undoBtn.style.visibility = (actionHistory.length > 0) ? 'visible' : 'hidden';
+            undoBtn.style.visibility = (actionHistory.length > 0) ? 'visible' : 'hidden'; // Oculta se não tem o que desfazer
         }
 
+        // Controle para manter a pilha de imagens sempre abastecida (se sobrar 50 na tela, baixa mais 100)
         function checkAndFetchMore() {
             const remainingCards = getVisibleCards().length;
             if (remainingCards <= 50 && nextPageToken) listPhotos();
@@ -884,10 +1068,14 @@
             }
         }
 
+        // Força zerar a tela toda e baixar de novo da API
         function reloadFolder() {
             loadActiveFolder();
         }
 
+        // =======================================================
+        // LÓGICA DE LIMPEZA DE LIXEIRA (DESTRUTIVA)
+        // =======================================================
         async function emptyRejectFolder() {
             const rejectFolderId = FOLDERS[1];
             let pageToken = null;
@@ -901,7 +1089,7 @@
                 trashBtn.disabled = true;
                 trashBtn.style.opacity = "0.5";
 
-                // 1. Move os arquivos da pasta Reject para a lixeira
+                // 1. Move os arquivos da sua pasta virtual "Reject" para a lixeira embutida do Google Drive
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query,
@@ -918,12 +1106,12 @@
                                 resource: { trashed: true }                            
                             })
                         );
-                        await Promise.all(deletePromises);
+                        await Promise.all(deletePromises); // Espera lixar lote
                     }
                     pageToken = response.result.nextPageToken;
                 } while (pageToken);
 
-                // 2. Esvazia a lixeira global do Google Drive permanentemente
+                // 2. Comanda o Google Drive a esvaziar TODA a lixeira da sua conta permanentemente!
                 trashBtn.innerHTML = "🔥"; 
                 await gapi.client.drive.files.emptyTrash({});
 
@@ -943,20 +1131,18 @@
             }
         }
 
-        function openReorderModal() {
-            document.getElementById('reorder-modal').style.display = 'flex';
-        }
-
-        function closeReorderModal() {
-            document.getElementById('reorder-modal').style.display = 'none';
-        }
+        // =======================================================
+        // LÓGICA DE TRANSFERÊNCIA DE 50 ARQUIVOS (REORDER)
+        // =======================================================
+        function openReorderModal() { document.getElementById('reorder-modal').style.display = 'flex'; }
+        function closeReorderModal() { document.getElementById('reorder-modal').style.display = 'none'; }
 
         async function executeReorder() {
             closeReorderModal(); 
             
-            const sourceFolderId = '19UxvEpWqcM931B0AKbjy1NT1Y_vqO0p6'; // Pasta (1)
-            const destFolderId = FOLDERS['source']; // _CURADORIA
-            const limit = 50; // Atualizado para mover 50 por vez
+            const sourceFolderId = '19UxvEpWqcM931B0AKbjy1NT1Y_vqO0p6'; // Link da Pasta (1) que fará a injeção
+            const destFolderId = FOLDERS['source']; // Recebedor: _CURADORIA
+            const limit = 50; // Quantidade de fotos por batelada
             
             const btn = document.getElementById('btn-reorder');
             const originalText = btn.innerHTML;
@@ -965,11 +1151,11 @@
             let filesToMove = [];
             
             try {
-                btn.innerHTML = "⏳ BUSCANDO...";
+                btn.innerHTML = "⏳";
                 btn.disabled = true;
                 btn.style.opacity = "0.5";
 
-                // 1. Busca até 50 arquivos na Pasta (1)
+                // 1. Vasculha a pasta 1 atrás das 50 fotos
                 do {
                     const response = await gapi.client.drive.files.list({
                         q: query,
@@ -994,8 +1180,8 @@
                     return;
                 }
 
-                // 2. Processamento em lotes menores para evitar bloqueios de API (Chunking)
-                const chunkSize = 25; // Envia lotes de 25 arquivos por requisição
+                // 2. Realoca de 25 em 25 (Chunking) para a API não bloquear a conexão por Span
+                const chunkSize = 25; 
                 for (let i = 0; i < filesToMove.length; i += chunkSize) {
                     const chunk = filesToMove.slice(i, i + chunkSize);
                     
@@ -1008,13 +1194,13 @@
                         })
                     );
                     
-                    btn.innerHTML = `⏳ MOVENDO ${Math.min(i + chunkSize, filesToMove.length)} / ${filesToMove.length}...`;
-                    await Promise.all(movePromises); // Espera o lote atual terminar para passar pro próximo
+                    btn.innerHTML = `⏳ ${Math.min(i + chunkSize, filesToMove.length)}/${filesToMove.length}`;
+                    await Promise.all(movePromises); 
                 }
 
                 alert(`${filesToMove.length} arquivo(s) transferido(s) para a Curadoria com sucesso!`);
                 
-                // Atualiza a tela de Origem
+                // Se sua tela atual for a de Origem, atualiza os cards para você poder julgá-las imediatamente
                 if (activeFolderKey === 'source') {
                     reloadFolder(); 
                 }
@@ -1028,17 +1214,18 @@
                 btn.style.opacity = "1";
             }
         }
-        // ---------- LÓGICA DE INSTALAÇÃO VIA POPUP (PWA) ----------
+
+        // =======================================================
+        // INSTALAÇÃO DO APP NATIVO VIA POPUP (PWA)
+        // =======================================================
         let deferredPrompt;
 
-        // Ouve o evento do navegador dizendo que o PWA pode ser instalado
+        // Fica observando o navegador informar que o app tem suporte para ser instalado
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Impede o Chrome de mostrar aquele mini-aviso padrão
-            e.preventDefault();
-            // Guarda o evento para usarmos no botão
-            deferredPrompt = e;
+            e.preventDefault(); // Esconde as abinhas chatas automáticas do Chrome
+            deferredPrompt = e; // Põe o "convite" num gatilho
             
-            // Exibe o nosso modal personalizado automaticamente
+            // Ativa o nosso modal estilizado
             document.getElementById('install-modal').style.display = 'flex';
         });
 
@@ -1046,30 +1233,28 @@
             document.getElementById('install-modal').style.display = 'none';
         }
 
+        // Aciona o card real do Android/iOS caso a pessoa aceite
         async function triggerInstall() {
             if (deferredPrompt) {
-                // Dispara a janela de instalação nativa do Android/iOS/Windows
                 deferredPrompt.prompt();
                 
-                // Espera a resposta do usuário
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
                     console.log('App instalado pelo usuário!');
                 }
                 
-                // Limpa a variável e fecha o nosso modal
                 deferredPrompt = null;
                 closeInstallModal();
             }
         }
 
-        // Se o app for instalado com sucesso, garante que o modal suma
+        // Retira os avisos de instalação se você rodar por dentro do App Instalado
         window.addEventListener('appinstalled', () => {
             closeInstallModal();
             deferredPrompt = null;
         });
 
-        // ---------- REGISTRO DO SERVICE WORKER (PWA) ----------
+        // Habilita a memória em Cache Offline para o app inicializar mais rápido depois do 1º acesso
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(registration => {
