@@ -3,7 +3,6 @@
 <head>
     <title>Editing Pro</title>
     <meta charset="utf-8" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <link rel="manifest" href="./manifest.json">
@@ -19,16 +18,14 @@
     
     <style>
         /* ===================================================
-           TOKENS DE DESIGN (PROPOSTA CLAUDE)
+           TOKENS DE DESIGN
            =================================================== */
         :root {
             --bg:           #070707;
             --surface:      #0f0f0f;
             --surface-2:    #161616;
-            --surface-3:    #1e1e1e;
             --border:       rgba(255, 255, 255, 0.06);
             --border-mid:   rgba(255, 255, 255, 0.10);
-            --border-hi:    rgba(255, 255, 255, 0.18);
             --text:         #e8e8e8;
             --text-dim:     #666;
             --text-muted:   #333;
@@ -66,9 +63,21 @@
             padding-top: 2vh;
         }
 
-        /* ===================================================
-           TELA DE LOGIN
-           =================================================== */
+        /* Corrigido: O título agora é uma div real que some após o login */
+        #login-title {
+            position: absolute;
+            top: calc(33vh - 52px);
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-ui);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: var(--text-muted);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
         #auth_button {
             padding: 15px 52px;
             background: transparent;
@@ -82,15 +91,10 @@
             color: var(--text);
             cursor: pointer;
             margin-top: 33vh;
-            position: relative;
-            z-index: 999999;
             transition: all 0.2s ease;
         }
         #auth_button:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
 
-        /* ===================================================
-           BARRA DE PASTAS
-           =================================================== */
         #folder-nav {
             width: 100%;
             display: none;
@@ -115,18 +119,11 @@
             cursor: pointer;
             transition: all 0.15s ease;
         }
-        .folder-tab.active {
-            color: var(--text);
-            background: var(--surface-2);
-            border-color: var(--border-mid);
-        }
+        .folder-tab.active { color: var(--text); background: var(--surface-2); border-color: var(--border-mid); }
 
-        /* ===================================================
-           ESTILO DA IMAGEM E CONTAINER
-           =================================================== */
         #info-bar { width: 100%; display: flex; justify-content: center; align-items: baseline; z-index: 1000; pointer-events: none; }
         #photo-count { font-family: var(--font-serif); font-size: 2.6rem; color: var(--text); display: none; line-height: 1; }
-        #filename-display { width: 100%; text-align: center; font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted); margin-top: 5px; }
+        #filename-display { width: 100%; text-align: center; font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted); margin-top: 5px; min-height: 1em;}
 
         #catalog-container {
             position: relative;
@@ -136,6 +133,7 @@
             display: none;
             margin-left: auto;
             margin-right: auto;
+            z-index: 10;
         }
 
         @media screen and (min-width: 951px) {
@@ -152,15 +150,11 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 24px 64px rgba(0,0,0,0.5);
         }
 
-        /* ===================================================
-           CONTROLES INFERIORES
-           =================================================== */
         #bottom-area { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 999999; padding-bottom: env(safe-area-inset-bottom, 0px); pointer-events: none; }
         #controls-wrapper { display: none; flex-direction: column; gap: 8px; padding: 0 10px 8px; position: relative; }
 
         .left-panel { display: flex; flex-direction: row; gap: 8px; pointer-events: auto; }
         .right-panel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; pointer-events: auto; width: 100%; }
-
         #undo-zone { position: absolute; right: 10px; bottom: calc(8px + 64px + 8px); pointer-events: auto; }
 
         .solid-btn {
@@ -173,20 +167,23 @@
         .btn-right-action .icon { font-size: 1.2rem; }
         .btn-undo { border-color: rgba(194, 153, 74, 0.2); color: var(--gold); visibility: hidden; }
 
-        /* Ocultar Texto em Mobile */
         @media screen and (max-width: 950px) {
             .btn-text { display: none !important; }
-            .btn-left-stack, #undo_button { width: 54px !important; height: 54px !important; font-size: 1.3rem !important; }
+            .btn-left-stack, #undo_button { width: 54px !important; height: 54px !important; font-size: 1.3rem !important; padding: 0 !important; }
             .btn-right-action { height: 66px; }
+            #undo-zone { bottom: calc(8px + 66px + 8px); }
         }
+
+        #end-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; text-align: center; color: var(--text-muted); font-family: var(--font-serif); }
     </style>
 </head>
 <body>
 
+    <div id="login-title">EDITING PRO</div>
     <button id="auth_button" onclick="handleAuthClick()">Abrir Pasta</button>
 
     <div id="folder-nav">
-        <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash">🗑️</button>
+        <button class="folder-tab" onclick="emptyRejectFolder()" id="tab-trash">🗑️</button>
         <button class="folder-tab active" onclick="switchFolder('source')" id="tab-source">📥 <span class="btn-text">Origem</span></button>
         <button class="folder-tab" onclick="switchFolder('manter')" id="tab-manter">📁 <span class="btn-text">Manter</span></button>
         <button class="folder-tab" onclick="switchFolder('top')" id="tab-top">🏳️ <span class="btn-text">Top</span></button>
@@ -197,15 +194,13 @@
     <div id="filename-display"></div>
 
     <div id="catalog-container">
-        <div id="end-screen"><div id="empty-message">A pasta está vazia.</div></div>
+        <div id="end-screen">A pasta está vazia.</div>
     </div>
 
     <div id="bottom-area">
         <div id="controls-wrapper">
             <div class="left-panel">
-                <div id="danger-zone">
-                    <button id="btn-reorder" class="solid-btn btn-left-stack" onclick="openReorderModal()">🔀 <span class="btn-text">Reorder</span></button>
-                </div>
+                <button id="btn-reorder" class="solid-btn btn-left-stack" style="display:none" onclick="executeReorder()">🔀 <span class="btn-text">Reorder</span></button>
                 <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()">🔄 <span class="btn-text">Sincronizar</span></button>
             </div>
             <div id="undo-zone">
@@ -226,28 +221,39 @@
     </div>
 
     <script type="text/javascript">
-        // LÓGICA FUNCIONAL RESTAURADA DO INDEX 1
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive';
-        const FOLDERS = { 'source': '1l5c1yWkNJWI3NIKp_6Fnxs56nzc44P6F', 1: '1UL8zEJGWWH2A1NEt-pUhRDQ9sTj9KI6w', 3: '1HDf3BCTUulwYA_IdF2AlTmZcy_TyO19x', 5: '1uHGn2rpZJj68QSe0EVJNh8JCXl7oiKoh' };
+        const FOLDERS = { 
+            'source': '1l5c1yWkNJWI3NIKp_6Fnxs56nzc44P6F', 
+            1: '1UL8zEJGWWH2A1NEt-pUhRDQ9sTj9KI6w', // Reject
+            3: '1HDf3BCTUulwYA_IdF2AlTmZcy_TyO19x', // Manter
+            5: '1uHGn2rpZJj68QSe0EVJNh8JCXl7oiKoh'  // Top
+        };
 
         let activeFolderKey = 'source', tokenClient, gapiInited = false, gsisInited = false, nextPageToken = null, isFetching = false;
+        let currentSortOrder = 'name';
         const processedIds = new Set();
         let actionHistory = [], totalPhotosInFolder = 0, currentViewIndex = 0;
 
         function gapiLoaded() {
             gapi.load('client', () => {
-                gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] }).then(() => { gapiInited = true; });
+                gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] }).then(() => { 
+                    gapiInited = true; 
+                    if(gsisInited) document.getElementById('auth_button').style.display = 'block';
+                });
             });
         }
         function initTokenClient() {
             tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' });
             gsisInited = true;
+            if(gapiInited) document.getElementById('auth_button').style.display = 'block';
         }
+
         function handleAuthClick() {
             tokenClient.callback = async (resp) => {
                 if (resp.error) return;
                 document.getElementById('auth_button').style.display = 'none';
+                document.getElementById('login-title').style.display = 'none';
                 document.getElementById('folder-nav').style.display = 'flex';
                 document.getElementById('catalog-container').style.display = 'block';
                 document.getElementById('controls-wrapper').style.display = 'flex';
@@ -257,21 +263,48 @@
             tokenClient.requestAccessToken();
         }
 
-        // Funções de carregamento e interface
         function loadActiveFolder() {
             const container = document.getElementById('catalog-container');
             container.querySelectorAll('.card').forEach(c => c.remove());
             nextPageToken = null; currentViewIndex = 0; processedIds.clear();
             document.getElementById('end-screen').style.display = 'none';
+            document.getElementById('btn-reorder').style.display = (activeFolderKey === 'source' ? 'flex' : 'none');
             fetchTotalCount(); listPhotos();
+        }
+
+        // Corrigido: Lógica de ordenação com ícones dinâmicos
+        function toggleSortOrder() {
+            const btn = document.getElementById('btn-sort');
+            if (currentSortOrder === 'name') {
+                currentSortOrder = 'createdTime desc';
+                btn.innerHTML = `📅 <span class="btn-text">DATA</span>`;
+            } else if (currentSortOrder === 'createdTime desc') {
+                currentSortOrder = 'quotaBytesUsed desc';
+                btn.innerHTML = `⚖️ <span class="btn-text">SIZE</span>`;
+            } else {
+                currentSortOrder = 'name';
+                btn.innerHTML = `🔤 <span class="btn-text">A-Z</span>`;
+            }
+            loadActiveFolder();
         }
 
         async function listPhotos() {
             if (isFetching) return;
             isFetching = true;
-            const query = `'${FOLDERS[activeFolderKey] || FOLDERS.source}' in parents and mimeType contains 'image/' and trashed = false`;
+            const folderId = FOLDERS[activeFolderKey] || FOLDERS.source;
+            const query = `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`;
+            
+            let orderBy = currentSortOrder;
+            if (currentSortOrder === 'size') orderBy = 'size desc';
+
             try {
-                const res = await gapi.client.drive.files.list({ pageSize: 100, fields: 'nextPageToken, files(id, name, thumbnailLink)', q: query, pageToken: nextPageToken });
+                const res = await gapi.client.drive.files.list({ 
+                    pageSize: 50, 
+                    fields: 'nextPageToken, files(id, name, thumbnailLink)', 
+                    q: query, 
+                    orderBy: orderBy,
+                    pageToken: nextPageToken 
+                });
                 nextPageToken = res.result.nextPageToken;
                 res.result.files.forEach(file => {
                     if (processedIds.has(file.id)) return;
@@ -289,40 +322,88 @@
 
         function updateCardsVisibility() {
             const cards = Array.from(document.querySelectorAll('.card:not(.animating)'));
-            if (cards.length === 0) { document.getElementById('end-screen').style.display = 'flex'; return; }
+            if (cards.length === 0 && !nextPageToken) { 
+                document.getElementById('end-screen').style.display = 'block'; 
+                document.getElementById('filename-display').innerText = "";
+                return; 
+            }
             cards.forEach((c, i) => {
                 c.style.visibility = (i === currentViewIndex) ? 'visible' : 'hidden';
                 c.style.opacity = (i === currentViewIndex) ? '1' : '0';
                 if (i === currentViewIndex) document.getElementById('filename-display').innerText = c.dataset.fileName;
             });
             document.getElementById('photo-count').innerText = totalPhotosInFolder;
+            if (cards.length <= 5 && nextPageToken) listPhotos();
         }
 
-        function handleGlobalAction(rating) {
+        async function handleGlobalAction(rating) {
             const cards = Array.from(document.querySelectorAll('.card:not(.animating)'));
             const active = cards[currentViewIndex];
             if (!active) return;
+            
+            const fileId = active.dataset.fileId;
+            const originFolderId = FOLDERS[activeFolderKey] || FOLDERS.source;
+            const targetFolderId = FOLDERS[rating];
+
             active.classList.add('animating');
             active.style.transform = rating === 1 ? 'translateX(-500px) rotate(-20deg)' : 'translateX(500px) rotate(20deg)';
             active.style.opacity = '0';
+            
             totalPhotosInFolder--;
-            gapi.client.drive.files.update({ fileId: active.dataset.fileId, addParents: FOLDERS[rating], removeParents: FOLDERS[activeFolderKey] || FOLDERS.source });
-            setTimeout(() => { active.remove(); updateCardsVisibility(); }, 200);
+            updateCardsVisibility();
+
+            // Histórico para o Undo
+            actionHistory.push({ fileId, origin: originFolderId, destination: targetFolderId, el: active });
+            document.getElementById('undo_button').style.visibility = 'visible';
+
+            // Motor de movimentação real no Drive
+            try {
+                await gapi.client.drive.files.update({ 
+                    fileId: fileId, 
+                    addParents: targetFolderId, 
+                    removeParents: originFolderId 
+                });
+            } catch (e) { console.error("Erro ao mover:", e); }
+
+            setTimeout(() => { active.remove(); updateCardsVisibility(); }, 250);
+        }
+
+        async function undoLastAction() {
+            if (actionHistory.length === 0) return;
+            const act = actionHistory.pop();
+            if (actionHistory.length === 0) document.getElementById('undo_button').style.visibility = 'hidden';
+
+            try {
+                await gapi.client.drive.files.update({ 
+                    fileId: act.fileId, 
+                    addParents: act.origin, 
+                    removeParents: act.destination 
+                });
+                reloadFolder(); // Recarrega para garantir sincronia real
+            } catch (e) { console.error("Erro no undo:", e); }
         }
 
         async function fetchTotalCount() {
-            const query = `'${FOLDERS[activeFolderKey] || FOLDERS.source}' in parents and mimeType contains 'image/' and trashed = false`;
-            const res = await gapi.client.drive.files.list({ q: query, fields: 'files(id)' });
-            totalPhotosInFolder = res.result.files.length;
-            document.getElementById('photo-count').innerText = totalPhotosInFolder;
+            const folderId = FOLDERS[activeFolderKey] || FOLDERS.source;
+            const query = `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`;
+            let count = 0;
+            let token = null;
+            try {
+                const res = await gapi.client.drive.files.list({ q: query, fields: 'files(id)' });
+                totalPhotosInFolder = res.result.files.length;
+                document.getElementById('photo-count').innerText = totalPhotosInFolder;
+            } catch(e) {}
         }
 
         function switchFolder(key) {
+            if(activeFolderKey === key) return;
             document.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + key).classList.add('active');
             activeFolderKey = key;
             loadActiveFolder();
         }
+
+        function reloadFolder() { loadActiveFolder(); }
     </script>
 </body>
 </html>
