@@ -7,477 +7,715 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#070707">
     <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Barlow+Condensed:wght@400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 
     <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     
     <style>
         /* ===================================================
-           ESTILOS GERAIS E LAYOUT VERTICAL (PORTRAIT/DESKTOP)
+           TOKENS DE DESIGN
            =================================================== */
-        
-        /* O body ocupa 100% da tela e impede rolagem (scroll) para manter o aspecto de aplicativo nativo */
-        body { 
-            background-color: #000; 
-            color: #fff; 
-            margin: 0; 
-            overflow: hidden; 
-            display: flex; 
-            align-items: center; 
-            justify-content: flex-start; 
-            height: 100vh;
-            width: 100vw;
-            flex-direction: column;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding-top: 2vh; 
-        }
-        
-        /* Botão inicial de Login do Google */
-        #auth_button { 
-            padding: 20px 40px; 
-            background: #fff; 
-            border: none;
-            border-radius: 50px; 
-            font-weight: bold;
-            cursor: pointer;
-            color: #000;
-            box-shadow: 0 6px 0 #ccc, 0 10px 15px rgba(0,0,0,0.5);
-            transition: all 0.1s ease;
-            text-transform: uppercase;
-            margin-top: 30vh; 
-            position: relative;
-            z-index: 999999;
-        }
-        #auth_button:active {
-            transform: translateY(6px);
-            box-shadow: 0 0 0 #ccc, 0 4px 6px rgba(0,0,0,0.5);
+        :root {
+            --bg:           #070707;
+            --surface:      #0f0f0f;
+            --surface-2:    #161616;
+            --surface-3:    #1e1e1e;
+            --border:       rgba(255, 255, 255, 0.06);
+            --border-mid:   rgba(255, 255, 255, 0.10);
+            --border-hi:    rgba(255, 255, 255, 0.18);
+            --text:         #e8e8e8;
+            --text-dim:     #666;
+            --text-muted:   #333;
+            --gold:         #c2994a;
+            --gold-glow:    rgba(194, 153, 74, 0.12);
+            --reject:       #c94444;
+            --reject-glow:  rgba(201, 68,  68,  0.10);
+            --manter:       #3d7ec4;
+            --manter-glow:  rgba(61,  126, 196, 0.10);
+            --top:          #3aaa72;
+            --top-glow:     rgba(58,  170, 114, 0.10);
+            --r-sm:   8px;
+            --r-md:   12px;
+            --r-lg:   18px;
+            --r-pill: 50px;
+            --font-serif:  'Playfair Display', Georgia, serif;
+            --font-ui:     'Barlow Condensed', Arial Narrow, sans-serif;
+            --font-mono:   'DM Mono', 'Courier New', monospace;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Barra de navegação superior (Abas das Pastas) */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* ===================================================
+           LAYOUT BASE
+           =================================================== */
+        body {
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            height: 100dvh;
+            width: 100vw;
+            font-family: var(--font-ui);
+            padding-top: 2vh;
+        }
+
+        /* ===================================================
+           TELA DE LOGIN
+           =================================================== */
+        #auth_button {
+            padding: 15px 52px;
+            background: transparent;
+            border: 1px solid var(--border-mid);
+            border-radius: var(--r-pill);
+            font-family: var(--font-ui);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text);
+            cursor: pointer;
+            margin-top: 33vh;
+            position: relative;
+            z-index: 999999;
+            transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+        }
+        #auth_button:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: var(--gold-glow);
+        }
+        #auth_button:active { transform: scale(0.97); }
+
+        /* Wordmark sutil acima do botão */
+        body::before {
+            content: 'EDITING PRO';
+            position: absolute;
+            top: calc(33vh - 52px);
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-ui);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 999998;
+            white-space: nowrap;
+        }
+
+        /* ===================================================
+           BARRA DE PASTAS (TOPO)
+           =================================================== */
         #folder-nav {
             width: 100%;
-            display: none; 
+            display: none;
             justify-content: center;
-            align-items: center; 
-            gap: 6px; 
-            padding: 5px 10px;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 10px 2px;
             z-index: 1001;
-            flex-wrap: wrap; 
+            flex-wrap: nowrap;
             box-sizing: border-box;
         }
 
-        /* Estilo padrão das abas do menu */
         .folder-tab {
-            background: #222;
-            color: #888;
-            border: 1px solid #444;
-            padding: 8px 12px; 
-            border-radius: 20px;
-            font-size: 0.75rem; 
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            white-space: nowrap; 
-        }
-
-        /* Aba atualmente selecionada ganha destaque branco */
-        .folder-tab.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
-        }
-
-        /* Estilo específico e de alerta para o botão da lixeira */
-        .btn-trash {
             background: transparent;
-            border-color: rgba(220, 53, 69, 0.5); 
+            color: var(--text-dim);
+            border: 1px solid transparent;
+            padding: 7px 13px;
+            border-radius: var(--r-sm);
+            font-family: var(--font-ui);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+            touch-action: manipulation;
+        }
+        .folder-tab:hover {
+            color: var(--text);
+            background: var(--surface-2);
+            border-color: var(--border);
+        }
+        .folder-tab.active {
+            color: var(--text);
+            background: var(--surface-2);
+            border-color: var(--border-mid);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .btn-trash {
             font-size: 1rem;
-            padding: 5px 10px;
+            padding: 7px 10px;
+            color: rgba(201, 68, 68, 0.45);
+            border-color: transparent;
         }
         .btn-trash:hover {
-            background: rgba(220, 53, 69, 0.2);
-            border-color: #dc3545;
+            color: var(--reject);
+            background: var(--reject-glow);
+            border-color: rgba(201, 68, 68, 0.2);
         }
 
-        /* Container do texto que conta quantas fotos restam */
+        /* ===================================================
+           CONTADOR E NOME DO ARQUIVO
+           =================================================== */
         #info-bar {
             position: relative;
             width: 100%;
             display: flex;
             justify-content: center;
-            align-items: center; 
-            padding: 5px 0;
+            align-items: baseline;
+            padding: 6px 0 0;
             z-index: 1000;
-            pointer-events: none; /* Deixa o clique vazar por ele */
-        }
-        #photo-count {
-            font-size: 1.2rem; 
-            font-weight: bold;
-            color: #aaa;
-            text-shadow: 0 1px 3px rgba(0,0,0,1);
-            display: none; 
+            pointer-events: none;
         }
 
-        /* Container do texto que exibe o nome original do arquivo RAW/JPG */
+        #photo-count {
+            font-family: var(--font-serif);
+            font-size: 2.6rem;
+            font-weight: 400;
+            color: var(--text);
+            display: none;
+            letter-spacing: -1.5px;
+            line-height: 1;
+        }
+
         #filename-display {
             width: 100%;
             text-align: center;
-            font-size: 0.7rem; 
-            font-weight: 300; /* Fonte discreta */
-            color: #777;      
-            margin-top: 2px;
-            min-height: 1rem; 
+            font-family: var(--font-mono);
+            font-style: italic;
+            font-size: 0.6rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            margin-top: 5px;
+            min-height: 1rem;
             z-index: 1000;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis; /* Adiciona '...' se for grande demais */
-            padding: 0 10px;
-            box-sizing: border-box;
-        }
-
-      /* O palco onde a foto fica posicionada e animada (Base Mobile Retrato) */
-        #catalog-container { 
-            position: relative; 
-            width: 85vw; 
-            height: 50vh; 
-            margin-top: 2vh; 
-            display: none;
-            transition: opacity 0.3s ease; 
-            margin-left: auto; 
-            margin-right: auto; 
+            text-overflow: ellipsis;
+            padding: 0 16px;
         }
 
         /* ===================================================
-           MODO RESPONSIVO: DESKTOP / TELAS GRANDES
-           Expande o container dinamicamente respeitando o limite de 800x800px
+           PALCO DA IMAGEM
            =================================================== */
+        #catalog-container {
+            position: relative;
+            width: 86vw;
+            height: 50vh;
+            margin-top: 10px;
+            display: none;
+            transition: opacity 0.25s ease;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         @media screen and (min-width: 951px) {
-            #catalog-container { 
-                width: 90vw; /* Expande a largura para preencher a tela */
-                height: calc(100vh - 240px); /* Altura dinâmica: Total da tela MENOS o topo e os botões da base */
-                margin-top: 2vh; 
+            #catalog-container {
+                width: 80vw;
+                max-width: 920px;
+                height: calc(100dvh - 230px);
+                margin-top: 8px;
             }
             .card img {
-                max-width: 800px !important; /* Trava a largura máxima na resolução nativa da foto */
-                max-height: 800px !important; /* Trava a altura máxima na resolução nativa da foto */
+                max-width: 800px !important;
+                max-height: 800px !important;
             }
         }
 
-        /* O "cartão" da foto em si */
-        .card { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            background: transparent; 
-            display: flex; 
-            flex-direction: column; 
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s ease-out, opacity 0.2s ease-out; 
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
-        .card img { 
-            max-width: 100%; 
-            max-height: 100%; 
+        .card img {
+            max-width: 100%;
+            max-height: 100%;
             width: auto;
             height: auto;
-            object-fit: contain; /* Garante que a foto não seja esticada ou cortada */
+            object-fit: contain;
             pointer-events: none;
-            border-radius: 12px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+            border-radius: var(--r-md);
+            box-shadow:
+                0 2px 4px rgba(0,0,0,0.6),
+                0 8px 24px rgba(0,0,0,0.7),
+                0 24px 64px rgba(0,0,0,0.5);
         }
 
-        /* Zonas gigantes e invisíveis nas laterais da tela para passar foto com o toque (Mobile Vertical) */
+        /* ===================================================
+           ZONAS DE NAVEGAÇÃO LATERAL
+           =================================================== */
         .nav-zone {
             position: absolute;
             top: 0; bottom: 0;
-            width: 35%; 
-            display: none; 
+            width: 35%;
+            display: none;
             align-items: center;
-            font-size: 3rem;
-            color: rgba(255, 255, 255, 0.3);
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.12);
             cursor: pointer;
-            z-index: 500000; 
-            transition: background 0.2s ease, color 0.2s ease;
+            z-index: 500000;
+            transition: color 0.15s ease;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
-        #nav-left { left: 0; justify-content: flex-start; padding-left: 15px; background: linear-gradient(to right, rgba(0,0,0,0.3), transparent); }
-        #nav-right { right: 0; justify-content: flex-end; padding-right: 15px; background: linear-gradient(to left, rgba(0,0,0,0.3), transparent); }
-        .nav-zone:active { color: rgba(255,255,255,1); background: rgba(255,255,255,0.1); }
+        #nav-left  { left: 0;  justify-content: flex-start; padding-left: 12px; }
+        #nav-right { right: 0; justify-content: flex-end;   padding-right: 12px; }
+        .nav-zone:active { color: rgba(255, 255, 255, 0.5); }
 
-        /* Mensagem de final de fila quando a pasta esvazia */
-        #end-screen { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 100%; display: none; flex-direction: column; align-items: center; gap: 20px; z-index: 0; 
+        /* ===================================================
+           TELA DE PASTA VAZIA
+           =================================================== */
+        #end-screen {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; display: none;
+            flex-direction: column; align-items: center; gap: 16px; z-index: 0;
         }
-        #empty-message { font-size: 1.2rem; color: #888; text-align: center; margin-bottom: 10px; }
-
-        /* ---------------------------------------------------
-           BOTÃO REORDER (ZONA DE AÇÃO) E MODAIS DE CONFIRMAÇÃO
-           --------------------------------------------------- */
-        
-        /* O Wrapper do Reorder agora vive dentro do painel da esquerda! */
-        #danger-zone {
-            display: none; /* Inicialmente oculto, controlado ativamente pelo JavaScript */
-        }
-        /* O estilo visual do botão Reorder foi mantido */
-        #btn-reorder {
-            border-color: rgba(13, 110, 253, 0.2); 
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1);
+        #empty-message {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            text-align: center;
+            letter-spacing: 0.3px;
         }
 
-        /* Fundo desfocado dos avisos (Popups) */
+        /* ===================================================
+           MODAIS
+           =================================================== */
         .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85); z-index: 9999999; align-items: center; justify-content: center;
-            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.90);
+            z-index: 9999999;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
-        /* Caixa do aviso */
         .modal-content {
-            background: #111; border: 1px solid #dc3545; padding: 25px; border-radius: 15px;
-            width: 85vw; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(220, 53, 69, 0.3); font-family: sans-serif;
+            background: var(--surface);
+            border: 1px solid rgba(201, 68, 68, 0.25);
+            padding: 28px 24px;
+            border-radius: var(--r-lg);
+            width: 88vw; max-width: 380px;
+            text-align: center;
+            font-family: var(--font-ui);
         }
-        /* Tema Azul para o Modal de Reorder */
-        .modal-content.reorder-theme { border-color: #0d6efd; box-shadow: 0 10px 40px rgba(13, 110, 253, 0.2); }
-        .modal-content.reorder-theme h3 { color: #0d6efd; }
-        .btn-confirm.reorder-btn { background: #0d6efd; opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(13, 110, 253, 0.4); }
-        
-        .modal-actions { display: flex; gap: 10px; justify-content: space-between; }
-        .btn-cancel, .btn-confirm { flex: 1; padding: 12px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-        .btn-cancel { background: #444; color: #fff; }
-        .btn-confirm { background: #dc3545; color: #fff; opacity: 0.4; cursor: not-allowed; transition: all 0.2s;}
-        .btn-confirm.enabled { opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
+        .modal-content h3 {
+            font-family: var(--font-serif);
+            font-weight: 400;
+            font-size: 1.25rem;
+            color: var(--reject);
+            margin: 0 0 10px;
+            letter-spacing: 0.3px;
+        }
+        .modal-content p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.55;
+            margin: 0 0 22px;
+            font-weight: 400;
+        }
+        .modal-content.reorder-theme { border-color: rgba(61, 126, 196, 0.25); }
+        .modal-content.reorder-theme h3 { color: var(--manter); }
+        .btn-confirm.reorder-btn { background: var(--manter); opacity: 1; cursor: pointer; }
 
-        /* ---------------------------------------------------
-           PAINÉIS DE BOTÕES INFERIORES (AÇÕES)
-           --------------------------------------------------- */
+        .modal-actions { display: flex; gap: 8px; }
+        .btn-cancel, .btn-confirm {
+            flex: 1; padding: 13px 0;
+            border-radius: var(--r-md);
+            border: none;
+            font-family: var(--font-ui);
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+        .btn-cancel  { background: var(--surface-3); color: var(--text-dim); }
+        .btn-confirm { background: var(--reject); color: #fff; opacity: 0.35; cursor: not-allowed; }
+        .btn-confirm.enabled { opacity: 1; cursor: pointer; }
+
+        /* ===================================================
+           ÁREA INFERIOR — CONTROLES
+           =================================================== */
         #bottom-area {
             position: fixed;
-            bottom: env(safe-area-inset-bottom, 25px); 
-            left: 0; width: 100%; display: flex; flex-direction: column; gap: 15px; 
-            z-index: 999999; pointer-events: none; /* Apenas os botões pegam clique */
+            bottom: 0; left: 0; width: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 999999;
+            pointer-events: none;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
+        /*
+         * controls-wrapper: JS faz display = 'flex' neste elemento.
+         * O flex-direction: column empilha a linha de utilidade acima das ações.
+         */
         #controls-wrapper {
-            display: none; justify-content: space-between; align-items: flex-end; padding: 0 10px; pointer-events: none;
-            position: relative; /* Permite posicionar o VOLTAR absolutamente dentro dele */
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 10px 8px;
+            pointer-events: none;
+            position: relative;
         }
 
-        .left-panel { display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
-        .right-panel { display: flex; flex-direction: row; gap: 10px; pointer-events: auto; }
+        /* Linha 1: utilitários (left-panel) + undo (absolute no canto direito) */
+        .left-panel {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            pointer-events: auto;
+            align-items: center;
+        }
 
-        /* Posicionamento independente do botão VOLTAR acima da aba direita */
         #undo-zone {
             position: absolute;
-            right: 10px; /* Alinhado com o padding-right do controls-wrapper */
-            bottom: 116px; /* Fica acima do botão TOP (104px altura + 12px gap no desktop) */
-            z-index: 1000;
+            right: 10px;
+            /* alinha verticalmente com a linha 1 (left-panel tem 44px de altura + 8px gap do wrapper) */
+            bottom: calc(8px + 64px + 8px); /* padding-bottom + action-row-height + gap */
             pointer-events: auto;
         }
 
-        /* Classes auxiliares para textos dos botões (Serão ocultos no mobile) */
-        .btn-text { display: inline; }
+        /* Linha 2: botões de ação — grade 3 colunas */
+        .right-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            pointer-events: auto;
+            width: 100%;
+        }
 
-        /* Estilo base com efeito 'Glassmorphism' dos botões de ação */
+        /* Etiquetas de texto (ocultas no mobile) */
+        .btn-text { display: inline; margin-left: 5px; }
+
+        /* ===================================================
+           ESTILOS BASE DOS BOTÕES
+           =================================================== */
         .solid-btn {
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6); color: #fff; font-weight: 700; cursor: pointer;
-            transition: all 0.2s ease; text-shadow: 0 1px 4px rgba(0,0,0,0.8); display: flex; align-items: center;
-            justify-content: center; text-transform: uppercase; touch-action: manipulation;
-            background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            touch-action: manipulation;
         }
-        .solid-btn:active { transform: scale(0.96) translateY(2px); }
+        .solid-btn:active { transform: scale(0.95); }
 
-        .btn-left-stack { width: 130px; height: 46px; border-radius: 12px; font-size: 0.8rem; letter-spacing: 0.5px; }
-        
-        #undo_button { width: 65px; height: 46px; border-radius: 12px; font-size: 1.2rem; padding: 0; }
-        .btn-undo { border-color: rgba(255, 193, 7, 0.2); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1); visibility: hidden; }
-        .btn-sync { border-color: rgba(232, 62, 140, 0.2); box-shadow: 0 4px 15px rgba(232, 62, 140, 0.1); }
-
-        .btn-right-action { width: 65px; height: 104px; flex-direction: column; border-radius: 16px; font-size: 0.65rem; gap: 8px; }
-        .btn-right-action .icon { font-size: 1.4rem; }
-        .btn-reject { border-color: rgba(220, 53, 69, 0.2); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1); }
-        .btn-manter { border-color: rgba(13, 110, 253, 0.2); box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1); }
-        .btn-top { border-color: rgba(40, 167, 69, 0.2); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1); }
-
-        /* Botão para apagar a tela contra inatividade ou pra ver a imagem crua */
-        #hide-strip { display: none; justify-content: center; width: 100%; pointer-events: none; }
-        #hide-btn { 
-            background: rgba(128, 128, 128, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 25px; border-radius: 25px; 
-            font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
-            pointer-events: auto; text-transform: uppercase; 
+        /* Botões utilitários pequenos (sync, reorder, undo) */
+        .btn-left-stack {
+            height: 44px;
+            padding: 0 16px;
+            border-radius: var(--r-sm);
+            gap: 6px;
+        }
+        #undo_button {
+            height: 44px;
+            padding: 0 14px;
+            border-radius: var(--r-sm);
+            gap: 5px;
         }
 
-        /* Oculta por padrão os botões do layout Landscape para não aparecerem na tela em pé */
+        .btn-undo {
+            border-color: rgba(194, 153, 74, 0.2);
+            color: var(--gold);
+            visibility: hidden;
+        }
+        .btn-undo:hover { background: var(--gold-glow); border-color: var(--gold); }
+
+        .btn-sync { border-color: var(--border); }
+        .btn-sync:hover { background: var(--surface-2); border-color: var(--border-mid); }
+
+        #btn-reorder { border-color: rgba(61, 126, 196, 0.2); }
+        #btn-reorder:hover { background: var(--manter-glow); border-color: var(--manter); }
+
+        #danger-zone { display: none; }
+
+        /* Botões de ação (Reject / Manter / Top) */
+        .btn-right-action {
+            height: 64px;
+            border-radius: var(--r-md);
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            gap: 8px;
+            flex-direction: column;
+        }
+        .btn-right-action .icon { font-size: 1.2rem; }
+
+        .btn-reject {
+            border-color: rgba(201, 68, 68, 0.2);
+            color: #bb5555;
+        }
+        .btn-reject:hover { background: var(--reject-glow); border-color: var(--reject); color: #e06666; }
+
+        .btn-manter {
+            border-color: rgba(61, 126, 196, 0.2);
+            color: #5588bb;
+        }
+        .btn-manter:hover { background: var(--manter-glow); border-color: var(--manter); color: #6699cc; }
+
+        .btn-top {
+            border-color: rgba(58, 170, 114, 0.2);
+            color: #44997a;
+        }
+        .btn-top:hover { background: var(--top-glow); border-color: var(--top); color: #55bb88; }
+
+        /* Botão ocultar tela (olho) */
+        #hide-strip {
+            display: none;
+            justify-content: center;
+            width: 100%;
+            pointer-events: none;
+            padding: 0 10px 10px;
+        }
+        #hide-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 9px 40px;
+            border-radius: var(--r-pill);
+            font-family: var(--font-ui);
+            font-size: 0.66rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+        #hide-btn:hover { border-color: var(--border-mid); color: var(--text-dim); }
+
+        /* Itens exclusivos do modo paisagem (ocultos por padrão) */
         .landscape-only { display: none; }
 
         /* ===================================================
-           MODO RESPONSIVO: MOBILE GERAL (Retrato e Paisagem)
-           Esconde os textos, permitindo botões compactos e quadrados
+           MOBILE GERAL (≤ 950px)
            =================================================== */
         @media screen and (max-width: 950px) {
-            /* Oculta todos os textos envoltos em .btn-text */
+            body { padding-top: 1vh; }
+
+            /* Oculta texto dos botões */
             .btn-text { display: none !important; }
 
-            /* Força formato quadrado para botões inferiores (Sync, Voltar, Ações, Reorder, Olho) */
-            .btn-left-stack, .btn-right-action, #hide-btn, #btn-reorder, #undo_button {
-                width: 60px !important;
-                height: 60px !important;
-                border-radius: 16px;
-                padding: 0 !important;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.6rem !important; /* Ícones maiores para compensar a falta de texto */
-                flex-direction: row !important; /* Desativa a coluna (column) das ações da direita */
-            }
-
-            /* No Mobile Retrato, o bloco do Voltar desce porque as ações da direita encolheram para 60px */
-            #undo-zone {
-                bottom: 72px; /* 60px (altura do botão Top mobile) + 12px de margem (gap) */
-            }
-
-            /* Reseta a margem dos ícones internos */
-            .btn-right-action .icon { font-size: 1.6rem; margin: 0; }
-
-            /* Ajusta abas da pasta do topo/lateral para ficarem mais curtas e com fontes maiores */
+            /* Tabs do topo: emoji grande */
             .folder-tab {
-                font-size: 1.3rem !important;
-                padding: 12px 0 !important;
-                border-radius: 14px;
+                font-size: 1.2rem !important;
+                padding: 9px 12px !important;
+                border-radius: var(--r-md) !important;
             }
+
+            /* Contador menor */
+            #photo-count { font-size: 2rem; }
+
+            /* Botões utilitários: quadrados e grandes para polegar */
+            .btn-left-stack,
+            #undo_button {
+                width: 54px !important;
+                height: 54px !important;
+                padding: 0 !important;
+                border-radius: var(--r-md) !important;
+                font-size: 1.3rem !important;
+                gap: 0 !important;
+            }
+
+            /* Botões de ação: quadrados, ícones grandes */
+            .btn-right-action {
+                height: 66px;
+                flex-direction: column !important;
+                gap: 0 !important;
+                font-size: 0.58rem !important;
+            }
+            .btn-right-action .icon { font-size: 1.5rem; }
+
+            /* Undo-zone acompanha a nova altura dos botões de utilidade */
+            #undo-zone {
+                bottom: calc(8px + 66px + 8px); /* padding-bottom + action-height + gap */
+            }
+
+            /* Container da imagem: cresce até o topo da barra inferior */
+            #catalog-container { height: 47vh; }
         }
 
         /* ===================================================
-           MODO RESPONSIVO: LANDSCAPE (CELULAR DEITADO)
-           Usa a lógica do D-Pad na esquerda e libera o centro.
+           MOBILE LANDSCAPE
            =================================================== */
         @media screen and (max-width: 950px) and (orientation: landscape),
                screen and (max-height: 600px) and (orientation: landscape) {
-            
-            body { padding-top: 0; }
 
-            /* Exibe as setas de imagem e o botão de Sync exclusivo para o grid lateral */
+            body { padding-top: 0; }
             .landscape-only { display: block; }
 
-            /* TEXTOS INFORMATIVOS (Contador/Nome): Movidos para a extrema DIREITA (Topo) */
-            #info-bar { 
-                position: fixed; top: 15px; right: 5%; left: auto;
-                transform: none; width: auto; z-index: 1002; justify-content: flex-end;
+            /* Contador e nome do arquivo: canto superior direito */
+            #info-bar {
+                position: fixed; top: 12px; right: 5%; left: auto;
+                transform: none; width: auto; z-index: 1002;
+                justify-content: flex-end;
             }
-            #filename-display { 
-                position: fixed; top: 40px; right: 5%; left: auto;
-                transform: none; width: 40vw; z-index: 1002; text-align: right; padding: 0;
+            #filename-display {
+                position: fixed; top: 44px; right: 5%; left: auto;
+                transform: none; width: 40vw; z-index: 1002;
+                text-align: right; padding: 0;
             }
 
-            /* ÁREA DA IMAGEM: Centro livre, 96% de altura (2% de topo e base respiro) */
+            /* Imagem: centro livre */
             #catalog-container {
-                width: 40vw; 
-                height: 96vh; 
-                margin-top: 2vh; 
-                margin-bottom: 2vh;
+                width: 42vw;
+                height: 96dvh;
+                margin-top: 2vh; margin-bottom: 2vh;
                 margin-left: auto; margin-right: auto;
             }
 
-            /* REMOVE AS ZONAS INVISÍVEIS LATERAIS DE TOQUE na foto para evitar esbarrões no celular deitado */
+            /* Remove zonas de toque lateral (evita toques acidentais) */
             #nav-left, #nav-right { display: none !important; }
 
-            /* LATERAL ESQUERDA (D-Pad): Abas numa grade de 2 Colunas x 4 Linhas com margem de 5% */
+            /* Painel de abas: grade 2×4 na lateral esquerda */
             #folder-nav {
                 position: fixed;
-                top: 50%;
-                left: 2%; 
+                top: 50%; left: 2%;
                 transform: translateY(-50%);
                 display: grid !important;
                 grid-template-columns: 1fr 1fr;
-                width: 140px; /* Largura enxuta já que não tem texto */
-                background: rgba(0, 0, 0, 0.4);
-                border-radius: 15px;
+                width: 132px;
+                background: rgba(7, 7, 7, 0.75);
+                border: 1px solid var(--border);
+                border-radius: var(--r-lg);
                 padding: 8px;
-                gap: 10px;
+                gap: 8px;
                 z-index: 1001;
                 margin: 0;
+                backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             }
-            
-            /* ORDEM DO GRID:
-               Lixeira (1) - A-Z (2)
-               Top (3)     - Manter (4)
-               Origem (5)  - Sync (6)
-               Seta Esq (7)- Seta Dir (8) */
-            #tab-trash          { order: 1; width: 100%; } 
-            #btn-sort           { order: 2; width: 100%; } 
-            #tab-top            { order: 3; width: 100%; } 
-            #tab-manter         { order: 4; width: 100%; } 
-            #tab-source         { order: 5; width: 100%; } 
-            .btn-sync-landscape { order: 6; width: 100%; } 
-            .btn-prev-landscape { order: 7; width: 100%; } 
-            .btn-next-landscape { order: 8; width: 100%; } 
-            
-            .folder-tab { text-align: center; margin: 0; }
 
-            /* Oculta o botão SYNC "antigo" original da barra esquerda para não ter dois na tela */
+            /* Ordem do grid de abas no landscape */
+            #tab-trash          { order: 1; width: 100%; }
+            #btn-sort           { order: 2; width: 100%; }
+            #tab-top            { order: 3; width: 100%; }
+            #tab-manter         { order: 4; width: 100%; }
+            #tab-source         { order: 5; width: 100%; }
+            .btn-sync-landscape { order: 6; width: 100%; }
+            .btn-prev-landscape { order: 7; width: 100%; }
+            .btn-next-landscape { order: 8; width: 100%; }
+            .folder-tab         { text-align: center; margin: 0; }
+
+            /* Oculta o botão Sync do painel normal (duplicate no landscape grid) */
             .left-panel .btn-sync { display: none !important; }
 
-            /* OCULTAR TELA (Olho): Isolado e fixado no canto inferior DIREITO (Base 5%) */
+            /* Botão olho: canto inferior direito */
             #hide-strip {
-                position: fixed;
-                right: 5%;
-                bottom: 5%;
-                width: auto;
-                z-index: 1000;
+                position: fixed; right: 5%; bottom: 5%;
+                width: auto; z-index: 1000;
                 justify-content: flex-end;
-                display: flex !important; /* Força exibir */
+                display: flex !important;
+                padding: 0;
             }
 
-            /* BOTÕES DE AÇÃO (Manter, Top): Acima do "Ocultar Tela" */
+            /* Botões de ação: coluna à direita, acima do olho */
             .right-panel {
                 position: fixed;
                 right: 5%;
-                bottom: calc(5% + 72px); /* Salta o olho (60px + 12px de gap) */
+                bottom: calc(5% + 66px);
+                display: flex !important;
                 flex-direction: row;
-                gap: 12px;
+                grid-template-columns: unset;
+                gap: 10px;
                 z-index: 1000;
+                padding: 0;
+                width: auto;
             }
 
-            /* REJECT (ZONA DE AÇÃO ESQUERDA): Removido do fluxo do painel direito e posicionado abaixo do Manter */
+            /* Reject: mesma linha do olho, à sua esquerda */
             .right-panel .btn-reject {
                 position: fixed;
-                right: calc(5% + 72px); /* Salta a largura do Olho/Top (60px + 12px gap), alinhando abaixo do Manter */
-                bottom: 5%; /* Mesma altura (linha) do Olho */
+                right: calc(5% + 66px);
+                bottom: 5%;
             }
 
-            /* REORDER (ZONA DE PERIGO): Acima do grupo de ações (Top), alinhado à extrema direita */
-            /* IMPORTANTE: Como o Reorder agora mora dentro da .left-panel, movemos a panel inteira! */
+            /* Painel esquerdo (Reorder): acima do grupo de ações */
             .left-panel {
                 position: fixed;
                 right: 5%;
-                bottom: calc(5% + 144px); /* Pula Olho e Top (60+12 + 60+12) */
+                bottom: calc(5% + 148px);
                 left: auto;
                 flex-direction: column;
                 z-index: 1000;
             }
 
-            /* BOTÃO VOLTAR (UNDO): Removido da esquerda para morar exatamente à esquerda do Reorder, acima do Manter */
+            /* Undo: à esquerda do Reorder, mesma linha */
             #undo-zone {
                 position: fixed;
-                right: calc(5% + 72px); /* Pula a largura (60px) + gap (12px) da left-panel (Reorder) */
-                bottom: calc(5% + 144px); /* Mesma altura (linha) do Reorder */
+                right: calc(5% + 66px);
+                bottom: calc(5% + 148px);
                 left: auto;
                 z-index: 1000;
             }
+        }
+
+        /* ===================================================
+           DESKTOP (> 950px): refinamentos adicionais
+           =================================================== */
+        @media screen and (min-width: 951px) {
+            #folder-nav { padding: 10px 16px 4px; gap: 5px; }
+            .folder-tab { padding: 7px 16px; }
+
+            #photo-count { font-size: 3rem; }
+
+            #controls-wrapper { padding: 0 16px 14px; gap: 10px; }
+            #hide-strip { padding: 0 16px 14px; }
+
+            .btn-left-stack { height: 42px; font-size: 0.72rem; }
+            #undo_button    { height: 42px; font-size: 0.72rem; }
+
+            .btn-right-action {
+                height: 60px;
+                flex-direction: row;
+                gap: 8px;
+                font-size: 0.72rem;
+            }
+            .btn-right-action .icon { font-size: 1rem; }
+
+            #undo-zone {
+                bottom: calc(14px + 60px + 10px); /* padding + action-height + gap */
+            }
+
+            #hide-btn { font-size: 0.66rem; }
         }
     </style>
 </head>
 <body>
 
-    <button id="auth_button" onclick="handleAuthClick()">ABRIR PASTA</button>
+    <button id="auth_button" onclick="handleAuthClick()">Abrir Pasta</button>
 
     <div id="folder-nav">
         <button class="folder-tab btn-trash" onclick="emptyRejectFolder()" id="tab-trash" title="Esvaziar pasta Reject (Atalho: G ou 3)">🗑️</button>
@@ -504,64 +742,66 @@
         <div id="nav-right" class="nav-zone" onclick="nextPhoto()" title="Atalho: Seta Direita">&#10095;</div>
 
         <div id="end-screen">
-            <div id="empty-message">A pasta está vazia!</div>
+            <div id="empty-message">A pasta está vazia.</div>
         </div>
     </div>
 
+    <!-- Modal: Reorder -->
     <div id="reorder-modal" class="modal-overlay">
         <div class="modal-content reorder-theme">
-            <h3>🔄 TRANSFERIR FOTOS 🔄</h3>
+            <h3>Transferir Fotos</h3>
             <p>Você vai mover <b>50 arquivos</b> da <i>Pasta (1)</i> direto para a <i>Curadoria</i>.</p>
-            
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeReorderModal()">CANCELAR</button>
-                <button id="btn-confirm-reorder" class="btn-confirm reorder-btn" onclick="executeReorder()">MOVER AGORA</button>
+                <button class="btn-cancel" onclick="closeReorderModal()">Cancelar</button>
+                <button id="btn-confirm-reorder" class="btn-confirm reorder-btn" onclick="executeReorder()">Mover Agora</button>
             </div>
         </div>
     </div>
     
+    <!-- Modal: Instalar PWA -->
     <div id="install-modal" class="modal-overlay">
-        <div class="modal-content reorder-theme" style="border-color: #28a745; box-shadow: 0 10px 40px rgba(40, 167, 69, 0.2);">
-            <h3 style="color: #28a745;">📱 INSTALAR APP 📱</h3>
+        <div class="modal-content reorder-theme" style="border-color: rgba(58, 170, 114, 0.25);">
+            <h3 style="color: var(--top);">Instalar App</h3>
             <p style="font-size: 0.9rem; margin-bottom: 20px;">Instale o Editing Pro no seu dispositivo para acesso rápido e em tela cheia.</p>
-            
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeInstallModal()">AGORA NÃO</button>
-                <button class="btn-confirm enabled" style="background: #28a745; box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);" onclick="triggerInstall()">INSTALAR</button>
+                <button class="btn-cancel" onclick="closeInstallModal()">Agora Não</button>
+                <button class="btn-confirm enabled" style="background: var(--top);" onclick="triggerInstall()">Instalar</button>
             </div>
         </div>
     </div>
 
     <div id="bottom-area">
         <div id="controls-wrapper">
-            
+
+            <!-- Linha 1: utilitários -->
             <div class="left-panel">
                 <div id="danger-zone">
-                    <button id="btn-reorder" class="solid-btn btn-left-stack" onclick="openReorderModal()">🔀 <span class="btn-text">REORDER</span></button>
+                    <button id="btn-reorder" class="solid-btn btn-left-stack" onclick="openReorderModal()">🔀 <span class="btn-text">Reorder</span></button>
                 </div>
-                
-                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">SINCRONIZAR</span></button>
+                <button class="solid-btn btn-left-stack btn-sync" onclick="reloadFolder()" title="Atalho: A ou 2">🔄 <span class="btn-text">Sincronizar</span></button>
             </div>
-            
+
+            <!-- Botão Voltar (posicionado absolutamente no canto direito da linha 1) -->
+            <div id="undo-zone">
+                <button id="undo_button" class="solid-btn btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ <span class="btn-text">Voltar</span></button>
+            </div>
+
+            <!-- Linha 2: ações principais -->
             <div class="right-panel">
                 <button class="solid-btn btn-right-action btn-reject" onclick="handleGlobalAction(1)" title="Atalho: S ou 4">
-                    <span class="icon">🏴</span> <span class="btn-text">REJECT</span>
+                    <span class="icon">🏴</span> <span class="btn-text">Reject</span>
                 </button>
                 <button class="solid-btn btn-right-action btn-manter" onclick="handleGlobalAction(3)" title="Atalho: D ou 5">
-                    <span class="icon">📁</span> <span class="btn-text">MANTER</span>
+                    <span class="icon">📁</span> <span class="btn-text">Manter</span>
                 </button>
                 <button class="solid-btn btn-right-action btn-top" onclick="handleGlobalAction(5)" title="Atalho: F ou 6">
-                    <span class="icon">🏳️</span> <span class="btn-text">TOP</span>
+                    <span class="icon">🏳️</span> <span class="btn-text">Top</span>
                 </button>
-            </div>
-            
-            <div id="undo-zone">
-                <button id="undo_button" class="solid-btn btn-undo" onclick="undoLastAction()" title="Atalho: R ou 1">↩ <span class="btn-text">VOLTAR</span></button>
             </div>
         </div>
 
         <div id="hide-strip">
-            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">👁️ <span class="btn-text">OCULTAR TELA</span></button>
+            <button id="hide-btn" onclick="toggleVisibility()" title="Atalho: 0">👁️ <span class="btn-text">Ocultar Tela</span></button>
         </div>
     </div>
 
