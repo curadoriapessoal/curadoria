@@ -1,3 +1,8 @@
+Aqui está o código completo e atualizado. Eu integrei as três alterações necessárias para exibir vídeos e fiz pequenos ajustes de segurança no recurso de "Desfazer Voto" (Undo) para garantir que ele lembre se o arquivo que ele está trazendo de volta era uma imagem ou um vídeo.
+
+Substitua todo o conteúdo do seu `index.html` por este:
+
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -144,11 +149,12 @@
 
         @media screen and (min-width: 951px) {
             #catalog-container { width: 80vw; max-width: 920px; height: calc(100dvh - 230px); margin-top: 8px; }
-            .card img { max-width: 800px !important; max-height: 800px !important; }
+            .card img, .card iframe { max-width: 800px !important; max-height: 800px !important; }
         }
 
         .card { position: absolute; width: 100%; height: 100%; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.2s ease-out, opacity 0.2s ease-out; }
         .card img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; pointer-events: none; border-radius: var(--r-md); box-shadow: 0 2px 4px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.7), 0 24px 64px rgba(0,0,0,0.5); }
+        .card iframe { border: none; border-radius: var(--r-md); box-shadow: 0 2px 4px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.7), 0 24px 64px rgba(0,0,0,0.5); width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 
         /* ===================================================
            ZONAS DE NAVEGAÇÃO LATERAL
@@ -530,7 +536,7 @@
         }
 
         // =======================================================
-        // LÓGICA DE EXIBIÇÃO E TROCA DE CARTÕES (FOTOS)
+        // LÓGICA DE EXIBIÇÃO E TROCA DE CARTÕES (FOTOS E VÍDEOS)
         // =======================================================
         function getVisibleCards() {
             return Array.from(document.querySelectorAll('.card:not(.animating)'));
@@ -609,7 +615,9 @@
             }
         });
 
-        // Adicionada a lógica dinâmica de ordenação visual (Emojis)
+        // =======================================================
+        // ORDENAÇÃO DINÂMICA
+        // =======================================================
         function toggleSortOrder() {
             const btn = document.getElementById('btn-sort');
             if (currentSortOrder === 'name') {
@@ -639,7 +647,8 @@
             let count = 0;
             let pageToken = null;
             const currentId = getActiveFolderId();
-            const query = `'${currentId}' in parents and mimeType contains 'image/' and trashed = false`;
+            // UPDATE: Include video files in the count
+            const query = `'${currentId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false`;
             const countDisplay = document.getElementById('photo-count');
             countDisplay.innerText = "...";
             
@@ -666,10 +675,12 @@
             document.getElementById('end-screen').style.display = 'none';
 
             const currentId = getActiveFolderId();
-            const query = `'${currentId}' in parents and mimeType contains 'image/' and trashed = false`;
+            // UPDATE: Include video files in the list request
+            const query = `'${currentId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false`;
             const requestParams = {
                 'pageSize': 100, 
-                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents)', 
+                // UPDATE: Add mimeType to fields
+                'fields': 'nextPageToken, files(id, name, thumbnailLink, parents, mimeType)', 
                 'q': query,
                 'orderBy': currentSortOrder 
             };
@@ -699,7 +710,9 @@
                 processedIds.add(file.id);
                 addedCount++;
 
-                const card = createCardElement(file.id, file.thumbnailLink.replace('=s220', '=s800'), file.name);                
+                const imgUrl = file.thumbnailLink ? file.thumbnailLink.replace('=s220', '=s800') : '';
+                // Passa o mimeType para a função criar o render correto
+                const card = createCardElement(file.id, imgUrl, file.name, file.mimeType);                
                 container.appendChild(card);
             });
 
@@ -711,12 +724,20 @@
             }
         }
 
-        function createCardElement(fileId, imgUrl, fileName) {
+        function createCardElement(fileId, imgUrl, fileName, mimeType) {
             const card = document.createElement('div');
             card.className = 'card';
             card.dataset.fileId = fileId; 
             card.dataset.fileName = fileName || 'Desconhecido'; 
-            card.innerHTML = `<img src="${imgUrl}">`;
+            card.dataset.mimeType = mimeType || ''; // Armazena pra ajudar no undo
+            
+            // Renderização Condicional: Vídeo (Iframe) ou Imagem (img)
+            if (mimeType && mimeType.startsWith('video/')) {
+                card.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="100%" frameborder="0" style="border-radius: var(--r-md); pointer-events: auto;"></iframe>`;
+            } else {
+                card.innerHTML = `<img src="${imgUrl}">`;
+            }
+            
             return card;
         }
 
@@ -743,14 +764,19 @@
             el.classList.add('animating'); 
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
-            const imgUrl = el.querySelector('img').src;
+            
+            // Pega src só se for imagem. O iframe não tem src util aqui, mas podemos repassar em branco
+            const imgEl = el.querySelector('img');
+            const imgUrl = imgEl ? imgEl.src : '';
+            const mimeType = el.dataset.mimeType;
             const originFolderId = getActiveFolderId(); 
             
             updateCardsVisibility(); 
             if (totalPhotosInFolder > 0) totalPhotosInFolder--; 
             updateCounterDisplay();
 
-            actionHistory.push({ fileId: fileId, destination: targetFolderId, origin: originFolderId, imgUrl: imgUrl });
+            // Histórico ganha mimeType para recriar vídeos caso necessário
+            actionHistory.push({ fileId: fileId, destination: targetFolderId, origin: originFolderId, imgUrl: imgUrl, fileName: el.dataset.fileName, mimeType: mimeType });
             updateUndoButtonState();
 
             setTimeout(() => {
@@ -767,7 +793,7 @@
                 }).then(function(response) {
                     console.log("Arquivo movido no Drive com sucesso!", response);
                 }).catch(function(e) {
-                    console.error("Erro na API ao mover a imagem:", e);
+                    console.error("Erro na API ao mover o arquivo:", e);
                 });
             }
         }
@@ -788,7 +814,9 @@
                 document.getElementById('end-screen').style.display = 'none';
 
                 const container = document.getElementById('catalog-container');
-                const card = createCardElement(lastAction.fileId, lastAction.imgUrl, "AÇÃO DESFEITA");
+                
+                // Recria passando mimeType pra renderizar video corretamente se for o caso
+                const card = createCardElement(lastAction.fileId, lastAction.imgUrl, "AÇÃO DESFEITA", lastAction.mimeType);
                 
                 card.style.transform = 'translateY(-100px) scale(0.9)'; 
                 card.style.opacity = '0';
@@ -909,7 +937,8 @@
             const btn = document.getElementById('btn-reorder');
             const originalText = btn.innerHTML;
             let pageToken = null;
-            const query = `'${sourceFolderId}' in parents and mimeType contains 'image/' and trashed = false`;
+            // UPDATE: Also include videos in reorder
+            const query = `'${sourceFolderId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false`;
             let filesToMove = [];
             
             try {
@@ -937,7 +966,7 @@
                 } while (pageToken && filesToMove.length < limit);
 
                 if (filesToMove.length === 0) {
-                    alert("A Pasta (1) está vazia! Nenhuma foto para mover.");
+                    alert("A Pasta (1) está vazia! Nenhuma mídia para mover.");
                     return;
                 }
 
@@ -1018,3 +1047,5 @@
     </script>
 </body>
 </html>
+
+```
