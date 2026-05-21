@@ -30,7 +30,7 @@
             --border-hi:    rgba(255, 255, 255, 0.18);
             --text:         #e8e8e8;
             --text-dim:     #666;
-            --text-muted:   #969696;
+            --text-muted:   #333;
             --gold:         #c2994a;
             --gold-glow:    rgba(194, 153, 74, 0.12);
             --reject:       #c94444;
@@ -67,6 +67,45 @@
             width: 100vw;
             font-family: var(--font-ui);
             padding-top: 2vh;
+        }
+
+        /* ===================================================
+           EFEITO DE BORDAS: GLOW 2%
+           =================================================== */
+        #glow-container {
+            position: fixed;
+            top: 2%; left: 2%; right: 2%; bottom: 2%;
+            border-radius: var(--r-md);
+            pointer-events: none;
+            z-index: 9999999;
+            opacity: 0;
+            padding: 4px; /* Espessura da linha do brilho */
+            /* A máscara a seguir fura o centro, deixando apenas a borda visível */
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: opacity 0.3s ease;
+            overflow: hidden;
+        }
+
+        #glow-container.active {
+            opacity: 1;
+        }
+
+        .glow-spinner {
+            position: absolute;
+            top: -50%; left: -50%; right: -50%; bottom: -50%;
+            background: conic-gradient(from 0deg, transparent 70%, var(--glow-color) 100%);
+            transform-origin: center;
+        }
+
+        #glow-container.active .glow-spinner {
+            animation: spin-glow 2s linear forwards;
+        }
+
+        @keyframes spin-glow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* ===================================================
@@ -133,7 +172,7 @@
            =================================================== */
         #info-bar { position: relative; width: 100%; display: flex; justify-content: center; align-items: baseline; padding: 6px 0 0; z-index: 1000; pointer-events: none; }
         #photo-count { font-family: var(--font-serif); font-size: 2.6rem; font-weight: 400; color: var(--text); display: none; letter-spacing: -1.5px; line-height: 1; }
-        #filename-display { width: 100%; text-align: center; font-family: var(--font-mono); font-style: italic; font-size: 0.7rem; font-weight: 300; color: var(--text-muted); margin-top: 5px; min-height: 1rem; z-index: 1000; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 16px; }
+        #filename-display { width: 100%; text-align: center; font-family: var(--font-mono); font-style: italic; font-size: 0.6rem; font-weight: 300; color: var(--text-muted); margin-top: 5px; min-height: 1rem; z-index: 1000; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 16px; }
 
         /* ===================================================
            PALCO DA IMAGEM
@@ -219,6 +258,19 @@
         .landscape-only { display: none; }
 
         /* ===================================================
+           TOAST NOTIFICATIONS (Alertas Flutuantes)
+           =================================================== */
+        #toast-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px;
+        }
+        .toast {
+            background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; font-weight: bold; text-align: center; font-size: 0.9rem;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.gold { background: #ffeb3b; color: #000; border: 1px solid #fff; } /* Alterado para amarelo vibrante */
+        .toast.danger { background: #f44336; color: #fff; border: 1px solid #fff; }
+
+        /* ===================================================
            MOBILE GERAL (≤ 950px)
            =================================================== */
         @media screen and (max-width: 950px) {
@@ -273,6 +325,12 @@
     </style>
 </head>
 <body>
+
+    <div id="glow-container">
+        <div class="glow-spinner"></div>
+    </div>
+
+    <div id="toast-container"></div>
 
     <div id="login-title">EDITING PRO</div>
     <button id="auth_button" onclick="handleAuthClick()">Abrir Pasta</button>
@@ -362,12 +420,64 @@
 
     <script type="text/javascript">
         // =======================================================
+        // LÓGICA DO BRILHO NAS BORDAS E TOASTS
+        // =======================================================
+        function triggerBorderGlow(colorHex) {
+            const glowContainer = document.getElementById('glow-container');
+            
+            // Atualiza a cor (usando variavel css injetada direto no estilo inline)
+            glowContainer.style.setProperty('--glow-color', colorHex);
+            
+            // Remove classe ativa se estiver rodando, para resetar animação
+            glowContainer.classList.remove('active');
+            
+            // Força o navegador a recalcular o layout (Reflow) para que a animação reinicie do zero
+            void glowContainer.offsetWidth;
+            
+            // Inicia o efeito
+            glowContainer.classList.add('active');
+            
+            // Desliga o efeito após 2 segundos
+            setTimeout(() => {
+                glowContainer.classList.remove('active');
+            }, 2000);
+        }
+
+        function showToast(msg, type='info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300); 
+            }, 3000);
+        }
+
+        // =======================================================
+        // TRATAMENTO DE DESCONEXÃO E REDE
+        // =======================================================
+        window.addEventListener('offline', () => {
+            triggerBorderGlow('#ffeb3b'); // Amarelo
+            showToast('Conexão com a internet perdida!', 'gold');
+        });
+
+        // Função para interceptar erros 401/403 do Google Drive API
+        function handleApiError(e) {
+            if (e && (e.status === 401 || e.status === 403 || !navigator.onLine)) {
+                triggerBorderGlow('#ffeb3b'); // Amarelo
+                showToast('Acesso negado. A sessão pode ter expirado.', 'gold');
+            }
+        }
+
+        // =======================================================
         // CREDENCIAIS E ESTRUTURAS DO GOOGLE DRIVE
         // =======================================================
         const CLIENT_ID = '905891014579-fjgqvkgbiucl4c0asn68pbv1p5gm6ofn.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive'; 
         
-        // Mapeamento de IDs das Pastas no Drive
         const FOLDERS = {
             'source': '1l5c1yWkNJWI3NIKp_6Fnxs56nzc44P6F',
             1: '1UL8zEJGWWH2A1NEt-pUhRDQ9sTj9KI6w', // Pasta Reject
@@ -375,14 +485,12 @@
             5: '1uHGn2rpZJj68QSe0EVJNh8JCXl7oiKoh'  // Pasta Top
         };
 
-        // Estado Global da Aplicação
         let activeFolderKey = 'source'; 
         let tokenClient;
         let gapiInited = false;
         let gsisInited = false;
         let nextPageToken = null; 
         let isFetching = false; 
-        let undoZIndex = 200000; 
         
         const processedIds = new Set(); 
         let actionHistory = []; 
@@ -391,9 +499,8 @@
         let isScreenHidden = false; 
         let currentSortOrder = 'name'; 
 
-        // Variáveis de inatividade e tela preta
         let inactivityTimer = null;
-        const INACTIVITY_DELAY = 10000; // 10 segundos ausente = Oculta a tela
+        const INACTIVITY_DELAY = 10000; 
 
         // =======================================================
         // INICIALIZAÇÃO DA API (GAPI E GSI)
@@ -402,7 +509,7 @@
             gapi.load('client', () => {
                 gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] })
                 .then(() => { gapiInited = true; maybeEnableButtons(); })
-                .catch(err => console.error("Erro GAPI", err));
+                .catch(err => { console.error("Erro GAPI", err); handleApiError(err); });
             });
         }
 
@@ -426,12 +533,12 @@
             tokenClient.callback = async (resp) => {
                 if (resp.error) {
                     console.error("Erro na autenticação:", resp);
+                    handleApiError(resp);
                     return;
                 }
                 
                 document.getElementById('auth_button').style.display = 'none';
                 
-                // Oculta o título EDITING PRO da tela inicial
                 const lt = document.getElementById('login-title');
                 if(lt) lt.style.display = 'none';
 
@@ -449,7 +556,7 @@
         }
 
         // =======================================================
-        // SISTEMA DE INATIVIDADE (OCULTAR/EXIBIR TELA)
+        // SISTEMA DE INATIVIDADE
         // =======================================================
         function hideImageArea() {
             const container = document.getElementById('catalog-container');
@@ -490,7 +597,7 @@
                 if (authBtn && authBtn.style.display === 'none' && !isScreenHidden) {
                     inactivityTimer = setTimeout(hideImageArea, INACTIVITY_DELAY);
                 }
-            } catch (e) { console.error("Erro no temporizador:", e); }
+            } catch (e) {}
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -531,7 +638,7 @@
         }
 
         // =======================================================
-        // LÓGICA DE EXIBIÇÃO E TROCA DE CARTÕES (FOTOS E VÍDEOS)
+        // LÓGICA DE EXIBIÇÃO E TROCA DE CARTÕES
         // =======================================================
         function getVisibleCards() {
             return Array.from(document.querySelectorAll('.card:not(.animating)'));
@@ -642,7 +749,6 @@
             let count = 0;
             let pageToken = null;
             const currentId = getActiveFolderId();
-            // UPDATE: Include video files in the count
             const query = `'${currentId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false`;
             const countDisplay = document.getElementById('photo-count');
             countDisplay.innerText = "...";
@@ -659,7 +765,10 @@
                 
                 totalPhotosInFolder = count;
                 updateCounterDisplay();
-            } catch (e) { countDisplay.innerText = "?"; }
+            } catch (e) { 
+                countDisplay.innerText = "?"; 
+                handleApiError(e); 
+            }
         }
 
         function updateCounterDisplay() { document.getElementById('photo-count').innerText = totalPhotosInFolder; }
@@ -670,11 +779,9 @@
             document.getElementById('end-screen').style.display = 'none';
 
             const currentId = getActiveFolderId();
-            // UPDATE: Include video files in the list request
             const query = `'${currentId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false`;
             const requestParams = {
                 'pageSize': 100, 
-                // UPDATE: Add mimeType to fields
                 'fields': 'nextPageToken, files(id, name, thumbnailLink, parents, mimeType)', 
                 'q': query,
                 'orderBy': currentSortOrder 
@@ -686,7 +793,10 @@
                 const response = await gapi.client.drive.files.list(requestParams);
                 nextPageToken = response.result.nextPageToken || null;
                 addCardsToStack(response.result.files);
-            } catch (e) { console.error("Error fetching:", e); } 
+            } catch (e) { 
+                console.error("Error fetching:", e); 
+                handleApiError(e);
+            } 
             finally { isFetching = false; }
         }
 
@@ -706,7 +816,6 @@
                 addedCount++;
 
                 const imgUrl = file.thumbnailLink ? file.thumbnailLink.replace('=s220', '=s800') : '';
-                // Passa o mimeType para a função criar o render correto
                 const card = createCardElement(file.id, imgUrl, file.name, file.mimeType);                
                 container.appendChild(card);
             });
@@ -724,9 +833,8 @@
             card.className = 'card';
             card.dataset.fileId = fileId; 
             card.dataset.fileName = fileName || 'Desconhecido'; 
-            card.dataset.mimeType = mimeType || ''; // Armazena pra ajudar no undo
+            card.dataset.mimeType = mimeType || ''; 
             
-            // Renderização Condicional: Vídeo (Iframe) ou Imagem (img)
             if (mimeType && mimeType.startsWith('video/')) {
                 card.innerHTML = `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="100%" frameborder="0" style="border-radius: var(--r-md); pointer-events: auto;"></iframe>`;
             } else {
@@ -760,7 +868,6 @@
             el.style.transform = `translate(${x}px, ${y}px) rotate(${x/15}deg)`;
             el.style.opacity = '0';
             
-            // Pega src só se for imagem. O iframe não tem src util aqui, mas podemos repassar em branco
             const imgEl = el.querySelector('img');
             const imgUrl = imgEl ? imgEl.src : '';
             const mimeType = el.dataset.mimeType;
@@ -770,7 +877,6 @@
             if (totalPhotosInFolder > 0) totalPhotosInFolder--; 
             updateCounterDisplay();
 
-            // Histórico ganha mimeType para recriar vídeos caso necessário
             actionHistory.push({ fileId: fileId, destination: targetFolderId, origin: originFolderId, imgUrl: imgUrl, fileName: el.dataset.fileName, mimeType: mimeType });
             updateUndoButtonState();
 
@@ -789,6 +895,7 @@
                     console.log("Arquivo movido no Drive com sucesso!", response);
                 }).catch(function(e) {
                     console.error("Erro na API ao mover o arquivo:", e);
+                    handleApiError(e);
                 });
             }
         }
@@ -810,8 +917,7 @@
 
                 const container = document.getElementById('catalog-container');
                 
-                // Recria passando mimeType pra renderizar video corretamente se for o caso
-                const card = createCardElement(lastAction.fileId, lastAction.imgUrl, "AÇÃO DESFEITA", lastAction.mimeType);
+                const card = createCardElement(lastAction.fileId, lastAction.imgUrl, lastAction.fileName, lastAction.mimeType);
                 
                 card.style.transform = 'translateY(-100px) scale(0.9)'; 
                 card.style.opacity = '0';
@@ -840,6 +946,7 @@
                 console.log("Ação desfeita no Drive!", response);
             }).catch(function(e) {
                 console.error("Erro na API de Undo:", e);
+                handleApiError(e);
             });
         }
 
@@ -857,6 +964,7 @@
         }
 
         function reloadFolder() {
+            triggerBorderGlow('#3aaa72'); // Aciona Glow Verde (--top)
             loadActiveFolder();
         }
 
@@ -864,6 +972,9 @@
         // LÓGICA DE LIMPEZA DE LIXEIRA (DESTRUTIVA)
         // =======================================================
         async function emptyRejectFolder() {
+            // Aciona Glow Vermelho (--reject)
+            triggerBorderGlow('#c94444');
+
             const rejectFolderId = FOLDERS[1];
             let pageToken = null;
             const query = `'${rejectFolderId}' in parents and trashed = false`;
@@ -901,14 +1012,14 @@
                 await gapi.client.drive.files.emptyTrash({});
 
                 if (deletedCount > 0) {
-                    alert(`${deletedCount} arquivo(s) rejeitado(s). A Lixeira do Google Drive foi completamente esvaziada.`);
+                    showToast(`${deletedCount} arquivo(s) rejeitado(s). A Lixeira do Google Drive foi completamente esvaziada.`, 'danger');
                 } else {
-                    alert("A pasta Reject já estava vazia. A Lixeira do Google Drive foi esvaziada com sucesso.");
+                    showToast("A pasta Reject já estava vazia. Lixeira esvaziada com sucesso.", 'info');
                 }
 
             } catch (e) {
                 console.error("Erro ao esvaziar a pasta Reject ou a Lixeira:", e);
-                alert("Ocorreu um erro ao tentar limpar os arquivos.");
+                handleApiError(e);
             } finally {
                 trashBtn.innerHTML = originalText;
                 trashBtn.disabled = false;
@@ -932,7 +1043,6 @@
             const btn = document.getElementById('btn-reorder');
             const originalText = btn.innerHTML;
             let pageToken = null;
-            // UPDATE: Also include videos in reorder
             const query = `'${sourceFolderId}' in parents and (mimeType contains 'image/' or mimeType contains 'video/') and trashed = false`;
             let filesToMove = [];
             
@@ -982,7 +1092,7 @@
                     await Promise.all(movePromises); 
                 }
 
-                alert(`${filesToMove.length} arquivo(s) transferido(s) para a Curadoria com sucesso!`);
+                showToast(`${filesToMove.length} arquivo(s) transferido(s) para a Curadoria com sucesso!`, 'info');
                 
                 if (activeFolderKey === 'source') {
                     reloadFolder(); 
@@ -990,7 +1100,7 @@
 
             } catch (e) {
                 console.error("Erro ao transferir arquivos:", e);
-                alert("Ocorreu um erro na transferência entre as pastas.");
+                handleApiError(e);
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -1042,5 +1152,3 @@
     </script>
 </body>
 </html>
-
-```
