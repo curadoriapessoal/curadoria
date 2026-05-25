@@ -31,7 +31,7 @@
             --border-hi:    rgba(255, 255, 255, 0.18);
             --text:         #e8e8e8;
             --text-dim:     #666;
-            --text-muted:   #333;
+            --text-muted:   #888;
             --gold:         #c2994a;
             --gold-glow:    rgba(194, 153, 74, 0.12);
             --reject:       #c94444;
@@ -243,7 +243,7 @@
             #bottom-area { 
                 position: fixed; bottom: 0; left: 0; width: 100%; 
                 display: flex; flex-direction: row; justify-content: space-between; align-items: flex-end;
-                z-index: 999999; padding: 0 16px env(safe-area-inset-bottom, 16px);
+                z-index: 999999; padding: 0 16px env(safe-area-inset-bottom, 48px);
                 pointer-events: none; /* Deixa os toques passarem na area vazia */
             }
 
@@ -303,7 +303,7 @@
             #bottom-area { position: fixed; bottom: 0; left: 0; width: 100%; display: flex; flex-direction: column; z-index: 999999; pointer-events: none; padding-bottom: 0; }
             #controls-wrapper { display: none; flex-direction: column; padding: 0 16px 14px; gap: 10px; width: 100%; align-items: center;}
             
-            .left-panel { display: flex; flex-direction: row; gap: 8px; width: 100%; justify-content: flex-start; height: 42px;}
+            .left-panel { display: flex; flex-direction: row; gap: 8px; width: 100%; justify-content: flex-start; height: 42px;safe-area
             .left-panel .solid-btn { width: auto; padding: 0 16px; border-radius: var(--r-sm); font-size: 0.72rem;}
             #danger-zone { display: none; height: 100%;}
             
